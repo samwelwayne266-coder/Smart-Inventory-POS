@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wayne Core | Cloud POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --accent: #6366f1; --bg: #020617; }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <nav class="w-20 lg:w-64 glass border-r border-white/10 flex flex-col p-6 space-y-8">
+        <h2 class="hidden lg:block text-xl font-black italic tracking-tighter">WAYNE <span class="text-indigo-500">POS</span></h2>
+        <div class="space-y-4">
+            <a href="index.html" class="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 font-bold text-sm text-slate-400">
+                <span>📦</span> <span class="hidden lg:block">Inventory</span>
+            </a>
+            <a href="pos.html" class="flex items-center gap-4 p-4 rounded-xl bg-indigo-600 font-bold text-sm shadow-lg shadow-indigo-500/20">
+                <span>🛒</span> <span class="hidden lg:block">POS Terminal</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="flex-1 p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div id="reader" class="glass rounded-3xl overflow-hidden h-40 bg-black"></div>
+            <div class="glass p-6 rounded-3xl">
+                <input type="text" id="pos-search" oninput="renderProducts()" placeholder="SEARCH CLOUD INVENTORY..." class="w-full bg-slate-900 p-4 rounded-xl text-xs mb-4 outline-none border border-slate-800 focus:border-indigo-500">
+                <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto"></div>
+            </div>
+            <div id="cart-list" class="glass p-6 rounded-3xl space-y-3 min-h-[200px]">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Basket</h3>
+                </div>
+        </div>
+
+        <div class="glass p-8 rounded-[2.5rem] space-y-6 h-fit sticky top-10">
+            <div class="space-y-2">
+                <div class="flex justify-between text-2xl font-black"><span>TOTAL</span><span id="total" class="text-indigo-400">$0.00</span></div>
+            </div>
+            <button onclick="completeSale()" class="w-full bg-indigo-600 py-6 rounded-2xl font-black uppercase shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all">Complete Transaction</button>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0",
+            databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com",
+            projectId: "wayne-quantum"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let cloudData = {};
+        let cart = [];
+
+        // SYNC WITH CLOUD
+        db.ref('inventory').on('value', (snapshot) => {
+            cloudData = snapshot.val() || {};
+            renderProducts();
+        });
+
+        function renderProducts() {
+            const q = document.getElementById('pos-search').value.toLowerCase();
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            for (let key in cloudData) {
+                const i = cloudData[key];
+                if (i.name.toLowerCase().includes(q)) {
+                    grid.innerHTML += `
+                        <button onclick="addToCart('${key}')" class="bg-slate-900 p-4 rounded-2xl text-left border border-slate-800 hover:border-indigo-500 transition-all group">
+                            <p class="text-[10px] font-black uppercase text-white">${i.name}</p>
+                            <p class="text-[10px] text-indigo-400 font-bold">$${i.price}</p>
+                            <p class="text-[8px] text-slate-600 mt-1">STOCK: ${i.qty}</p>
+                        </button>`;
+                }
+            }
+        }
+
+        function addToCart(key) {
+            const item = cloudData[key];
+            const inCart = cart.find(c => c.key === key);
+            if (item.qty <= (inCart ? inCart.qty : 0)) return alert("Stock Depleted!");
+            
+            if (inCart) inCart.qty++;
+            else cart.push({ ...item, key: key, qty: 1 });
+            renderCart();
+        }
+
+        function renderCart() {
+            let total = 0;
+            document.getElementById('cart-list').innerHTML = cart.map(i => {
+                total += (i.qty * i.price);
+                return `<div class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
+                    <p class="text-[10px] font-black uppercase">${i.name} x ${i.qty}</p>
+                    <p class="text-[10px] font-black text-indigo-400">$${(i.qty * i.price).toFixed(2)}</p>
+                </div>`;
+            }).join('');
+            document.getElementById('total').innerText = `$${total.toFixed(2)}`;
+        }
+
+        function completeSale() {
+            if (cart.length === 0) return;
+            cart.forEach(c => {
+                db.ref('inventory/' + c.key).update({ qty: cloudData[c.key].qty - c.qty });
+            });
+            alert("Cloud Stock Updated!");
+            cart = [];
+            renderCart();
+        }
+    </script>
+</body>
+</html>
