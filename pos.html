@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Wayne Core | Cloud POS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -11,40 +11,55 @@
     <style>
         :root { --accent: #6366f1; --bg: #020617; }
         body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        #reader video { object-fit: cover !important; border-radius: 1.5rem; }
+        .scanner-box { position: relative; border: 2px solid rgba(99, 102, 241, 0.3); border-radius: 1.5rem; overflow: hidden; height: 200px; }
+        .pay-btn.active { background: #6366f1; border-color: #818cf8; transform: scale(1.05); }
     </style>
 </head>
-<body class="flex min-h-screen">
+<body class="flex flex-col lg:flex-row min-h-screen pb-20 lg:pb-0">
 
-    <nav class="w-20 lg:w-64 glass border-r border-white/10 flex flex-col p-6 space-y-8">
-        <h2 class="hidden lg:block text-xl font-black italic tracking-tighter">WAYNE <span class="text-indigo-500">POS</span></h2>
-        <div class="space-y-4">
-            <a href="index.html" class="flex items-center gap-4 p-4 rounded-xl hover:bg-white/5 font-bold text-sm text-slate-400">
-                <span>📦</span> <span class="hidden lg:block">Inventory</span>
-            </a>
-            <a href="pos.html" class="flex items-center gap-4 p-4 rounded-xl bg-indigo-600 font-bold text-sm shadow-lg shadow-indigo-500/20">
-                <span>🛒</span> <span class="hidden lg:block">POS Terminal</span>
-            </a>
-        </div>
+    <nav class="fixed bottom-0 left-0 w-full lg:relative lg:w-64 glass border-t lg:border-t-0 lg:border-r border-white/10 flex lg:flex-col justify-around lg:justify-start p-4 lg:p-6 z-50">
+        <h2 class="hidden lg:block text-xl font-black italic tracking-tighter mb-10 text-white">WAYNE <span class="text-indigo-500">POS</span></h2>
+        <a href="index.html" class="flex flex-col lg:flex-row items-center gap-2 lg:gap-4 p-3 lg:p-4 rounded-xl font-bold text-[10px] lg:text-sm text-slate-400 uppercase">
+            <span>📦</span> <span>Stock</span>
+        </a>
+        <a href="pos.html" class="flex flex-col lg:flex-row items-center gap-2 lg:gap-4 p-3 lg:p-4 rounded-xl bg-indigo-600 font-bold text-[10px] lg:text-sm uppercase">
+            <span>🛒</span> <span>Sales</span>
+        </a>
     </nav>
 
-    <main class="flex-1 p-6 lg:p-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <main class="flex-1 p-4 lg:p-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 space-y-6">
-            <div id="reader" class="glass rounded-3xl overflow-hidden h-40 bg-black"></div>
-            <div class="glass p-6 rounded-3xl">
-                <input type="text" id="pos-search" oninput="renderProducts()" placeholder="SEARCH CLOUD INVENTORY..." class="w-full bg-slate-900 p-4 rounded-xl text-xs mb-4 outline-none border border-slate-800 focus:border-indigo-500">
-                <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto"></div>
+            <div class="scanner-box">
+                <div id="reader"></div>
             </div>
-            <div id="cart-list" class="glass p-6 rounded-3xl space-y-3 min-h-[200px]">
-                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Active Basket</h3>
-                </div>
+
+            <div class="glass p-5 rounded-3xl">
+                <input type="text" id="pos-search" oninput="renderProducts()" placeholder="SEARCH CLOUD..." class="w-full bg-slate-900 p-4 rounded-xl text-xs mb-4 outline-none border border-slate-800">
+                <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[250px] overflow-y-auto"></div>
+            </div>
+
+            <div id="cart-list" class="glass p-5 rounded-3xl min-h-[150px] space-y-2 text-xs">
+                <h3 class="text-[9px] font-black text-slate-500 uppercase mb-2">Shopping Basket</h3>
+            </div>
         </div>
 
-        <div class="glass p-8 rounded-[2.5rem] space-y-6 h-fit sticky top-10">
-            <div class="space-y-2">
+        <div class="glass p-6 lg:p-8 rounded-[2.5rem] space-y-6 h-fit sticky top-10">
+            <div>
+                <p class="text-[9px] font-black text-slate-500 uppercase mb-4">Select Payment Method</p>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setPay('Cash')" id="pay-Cash" class="pay-btn active bg-slate-900 border border-slate-800 p-3 rounded-xl text-[10px] font-bold transition-all">💵 CASH</button>
+                    <button onclick="setPay('M-Pesa')" id="pay-M-Pesa" class="pay-btn bg-slate-900 border border-slate-800 p-3 rounded-xl text-[10px] font-bold transition-all">📱 MPESA</button>
+                    <button onclick="setPay('Card')" id="pay-Card" class="pay-btn bg-slate-900 border border-slate-800 p-3 rounded-xl text-[10px] font-bold transition-all">💳 CARD</button>
+                </div>
+            </div>
+
+            <div class="border-t border-white/5 pt-4">
                 <div class="flex justify-between text-2xl font-black"><span>TOTAL</span><span id="total" class="text-indigo-400">$0.00</span></div>
             </div>
-            <button onclick="completeSale()" class="w-full bg-indigo-600 py-6 rounded-2xl font-black uppercase shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition-all">Complete Transaction</button>
+            
+            <button onclick="completeSale()" class="w-full bg-green-600 py-5 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-green-500 shadow-xl shadow-green-900/20 transition-all">Process Payment</button>
         </div>
     </main>
 
@@ -57,62 +72,56 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let cloudData = {};
-        let cart = [];
+        let cloudData = {}; let cart = []; let payMethod = 'Cash';
 
-        // SYNC WITH CLOUD
-        db.ref('inventory').on('value', (snapshot) => {
-            cloudData = snapshot.val() || {};
-            renderProducts();
-        });
+        const qrScanner = new Html5Qrcode("reader");
+        qrScanner.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 250, height: 150 } }, (code) => {
+            for(let key in cloudData) if(cloudData[key].code === code) addToCart(key);
+        }).catch(err => console.log("Cam Active"));
+
+        function setPay(m) {
+            payMethod = m;
+            document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('pay-'+m).classList.add('active');
+        }
+
+        db.ref('inventory').on('value', (s) => { cloudData = s.val() || {}; renderProducts(); });
 
         function renderProducts() {
             const q = document.getElementById('pos-search').value.toLowerCase();
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = '';
+            const grid = document.getElementById('product-grid'); grid.innerHTML = '';
             for (let key in cloudData) {
                 const i = cloudData[key];
                 if (i.name.toLowerCase().includes(q)) {
-                    grid.innerHTML += `
-                        <button onclick="addToCart('${key}')" class="bg-slate-900 p-4 rounded-2xl text-left border border-slate-800 hover:border-indigo-500 transition-all group">
-                            <p class="text-[10px] font-black uppercase text-white">${i.name}</p>
-                            <p class="text-[10px] text-indigo-400 font-bold">$${i.price}</p>
-                            <p class="text-[8px] text-slate-600 mt-1">STOCK: ${i.qty}</p>
-                        </button>`;
+                    grid.innerHTML += `<button onclick="addToCart('${key}')" class="bg-slate-900 p-4 rounded-2xl text-left border border-slate-800 text-[10px] uppercase font-bold">
+                        ${i.name}<br><span class="text-indigo-400">$${i.price}</span><br><span class="text-slate-600 font-normal">Stock: ${i.qty}</span>
+                    </button>`;
                 }
             }
         }
 
-        function addToCart(key) {
-            const item = cloudData[key];
-            const inCart = cart.find(c => c.key === key);
-            if (item.qty <= (inCart ? inCart.qty : 0)) return alert("Stock Depleted!");
-            
-            if (inCart) inCart.qty++;
-            else cart.push({ ...item, key: key, qty: 1 });
+        function addToCart(k) {
+            const i = cloudData[k];
+            const inC = cart.find(c => c.key === k);
+            if (i.qty <= (inC ? inC.qty : 0)) return alert("Stock Depleted!");
+            if (inC) inC.qty++; else cart.push({ ...i, key: k, qty: 1 });
             renderCart();
         }
 
         function renderCart() {
-            let total = 0;
+            let t = 0;
             document.getElementById('cart-list').innerHTML = cart.map(i => {
-                total += (i.qty * i.price);
-                return `<div class="flex justify-between items-center p-3 bg-white/5 rounded-xl border border-white/5">
-                    <p class="text-[10px] font-black uppercase">${i.name} x ${i.qty}</p>
-                    <p class="text-[10px] font-black text-indigo-400">$${(i.qty * i.price).toFixed(2)}</p>
-                </div>`;
+                t += (i.qty * i.price);
+                return `<div class="flex justify-between p-3 bg-white/5 rounded-xl"><span>${i.name} x${i.qty}</span><span>$${(i.qty*i.price).toFixed(2)}</span></div>`;
             }).join('');
-            document.getElementById('total').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('total').innerText = `$${t.toFixed(2)}`;
         }
 
         function completeSale() {
-            if (cart.length === 0) return;
-            cart.forEach(c => {
-                db.ref('inventory/' + c.key).update({ qty: cloudData[c.key].qty - c.qty });
-            });
-            alert("Cloud Stock Updated!");
-            cart = [];
-            renderCart();
+            if (!cart.length) return;
+            cart.forEach(c => db.ref('inventory/' + c.key).update({ qty: cloudData[c.key].qty - c.qty }));
+            alert(`Sold via ${payMethod}! Cloud Updated.`);
+            cart = []; renderCart();
         }
     </script>
 </body>
