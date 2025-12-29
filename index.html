@@ -15,10 +15,9 @@
         body { background-color: var(--bg); color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
         .glass { background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.08); }
         
-        /* UNIFIED SCANNER SYSTEM */
-        #reader { border: none !important; width: 100% !important; border-radius: 2rem; overflow: hidden; background: #000; }
-        #reader video { object-fit: cover !important; }
-        .scan-box { position: relative; border-radius: 2.5rem; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden; }
+        /* --- UNIFIED SCANNING SYSTEM --- */
+        #reader { border: none !important; width: 100% !important; border-radius: 1.5rem; overflow: hidden; background: #000; }
+        .scan-box { position: relative; border-radius: 2rem; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden; }
         .brackets { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 160px; z-index: 50; pointer-events: none; }
         .brk { position: absolute; width: 30px; height: 30px; border: 3px solid #fff; filter: drop-shadow(0 0 8px var(--accent)); }
         .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; }
@@ -26,15 +25,17 @@
         .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 10px; }
         .br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 10px 0; }
         .laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #ef4444; box-shadow: 0 0 15px #ef4444; animation: sweep 2.5s infinite linear; z-index: 51; }
-        @keyframes sweep { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+        @keyframes sweep { 0%, 100% { top: 10% } 50% { top: 90% } }
 
-        /* COMPACT BUTTONS & NAVIGATION */
+        /* --- COMPACT BUTTON ARCHITECTURE --- */
         .nav-btn { transition: 0.3s; border: 1px solid transparent; }
         .nav-active { background: #6366f1 !important; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
-        .small-btn { padding: 0.75rem 1.5rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
-        .small-btn:active { transform: scale(0.95); }
+        .compact-btn { padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+        .compact-btn:active { transform: scale(0.95); }
         
-        .gate-input { background: #0f172a; border: 1px solid #1e293b; color: #6366f1; text-align: center; letter-spacing: 0.5em; }
+        /* --- SECURITY AUTH GATE --- */
+        .gate-input { background: #0f172a; border: 1px solid #1e293b; color: #6366f1; text-align: center; font-family: 'Fira Code', monospace; letter-spacing: 0.5em; }
+        
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
@@ -42,32 +43,38 @@
 <body class="flex flex-col md:flex-row min-h-screen">
 
     <div id="auth-gate" class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center p-6">
-        <div class="text-center space-y-4">
+        <div class="text-center space-y-6 max-w-sm w-full">
             <h1 class="text-4xl font-black italic tracking-tighter uppercase">Wayne <span class="text-indigo-500">Core</span></h1>
-            <p class="text-[10px] font-mono text-slate-500 uppercase tracking-[0.4em]">Encrypted_Access_Required</p>
-            <input type="password" id="pass-key" class="gate-input w-64 p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all mt-8" placeholder="••••">
-            <button onclick="verify()" class="block w-full bg-indigo-600 p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500">Authorize</button>
+            <p class="text-[10px] font-mono text-slate-500 tracking-[0.4em]">AUTH_SESSION_REQUIRED</p>
+            <input type="password" id="pass-key" class="gate-input w-full p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all" placeholder="••••">
+            <button onclick="verifyAccess()" class="compact-btn w-full bg-indigo-600">Authorize Access</button>
+            <p class="text-[8px] text-slate-700 font-bold uppercase mt-8">SamwelWayne266 Secure Cloud Link</p>
         </div>
     </div>
 
-    <nav class="hidden md:flex flex-col w-64 glass p-6 border-r border-white/5 gap-4">
+    <nav class="hidden md:flex flex-col w-60 glass p-6 border-r border-white/5 gap-3 z-[100]">
         <div class="mb-8">
-            <h2 class="text-xl font-black italic uppercase">Wayne <span class="text-indigo-500">Core</span></h2>
-            <p class="text-[9px] text-slate-500 font-mono">ID: samwelwayne266</p>
+            <h2 class="text-lg font-black italic uppercase">Wayne <span class="text-indigo-500">Core</span></h2>
+            <p class="text-[8px] text-slate-500 font-mono mt-1 opacity-60">ID: samwelwayne266</p>
         </div>
-        <a href="index.html" class="nav-btn nav-active flex items-center gap-3 p-3 rounded-xl text-xs font-bold"><span>📊</span> Dashboard</a>
-        <a href="pos.html" class="nav-btn flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/5"><span>💳</span> Terminal</a>
+        <a href="index.html" class="nav-btn nav-active flex items-center gap-3 p-2.5 rounded-lg text-[11px] font-bold"><span>📊</span> Dashboard</a>
+        <a href="pos.html" class="nav-btn flex items-center gap-3 p-2.5 rounded-lg text-[11px] font-bold text-slate-400 hover:bg-white/5"><span>💳</span> Terminal</a>
+        <div class="mt-auto pt-4 border-t border-white/5">
+            <p class="text-[8px] text-slate-600 uppercase font-bold tracking-widest">v10.0.1 Stable</p>
+        </div>
     </nav>
 
-    <main id="app-content" class="flex-1 p-6 lg:p-12 overflow-y-auto opacity-0 transition-opacity duration-1000">
-        <header class="mb-8">
-            <h1 class="text-4xl font-black uppercase italic tracking-tighter">Inventory <span class="text-indigo-500">Hub</span></h1>
+    <main id="app-body" class="flex-1 p-6 lg:p-10 overflow-y-auto opacity-0 transition-opacity duration-1000">
+        <header class="mb-10">
+            <p class="text-indigo-400 font-mono text-[9px] tracking-[0.5em] mb-1 uppercase">Logistics_Interface_Gate</p>
+            <h1 class="text-5xl font-black uppercase italic tracking-tighter">Inventory <span class="text-indigo-500">Hub</span></h1>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-4 space-y-6">
-                <div class="glass p-4 scan-box">
-                    <div id="reader" class="h-48"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div class="lg:col-span-4 space-y-8">
+                <div class="glass p-4 scan-box shadow-2xl">
+                    <p class="text-[8px] font-black uppercase text-indigo-400 mb-2 px-2">Asset Capture Terminal</p>
+                    <div id="reader" class="h-44"></div>
                     <div class="brackets">
                         <div class="brk tl"></div><div class="brk tr"></div>
                         <div class="brk bl"></div><div class="brk br"></div>
@@ -76,35 +83,42 @@
                 </div>
 
                 <div class="glass p-6 rounded-3xl space-y-3">
-                    <input type="text" id="name" placeholder="ITEM NAME" class="w-full bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] font-bold outline-none focus:border-indigo-500">
-                    <input type="text" id="code" placeholder="UID CODE" class="w-full bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] font-mono text-indigo-400 outline-none">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="number" id="qty" placeholder="QTY" class="bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] outline-none">
-                        <input type="number" id="price" placeholder="PRICE" class="bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] outline-none">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Optional Nomenclature</label>
+                        <input type="text" id="name" placeholder="ITEM NAME" class="w-full bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] font-bold outline-none focus:border-indigo-500 transition-all">
+                        <input type="text" id="code" placeholder="UID REGISTER" class="w-full bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] font-mono text-indigo-300 outline-none">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="number" id="qty" placeholder="QTY" class="bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] outline-none">
+                            <input type="number" id="price" placeholder="PRICE" class="bg-slate-900 border border-white/5 p-3 rounded-xl text-[10px] outline-none">
+                        </div>
                     </div>
-                    <button onclick="sync()" class="small-btn w-full bg-indigo-600 text-white shadow-lg">Sync to Cloud</button>
+                    <button onclick="syncData()" class="compact-btn w-full bg-indigo-600 shadow-lg mt-2">Sync to Cloud</button>
                 </div>
             </div>
 
             <div class="lg:col-span-8 space-y-6">
-                <div class="glass p-6 rounded-3xl h-64">
-                    <canvas id="invChart"></canvas>
+                <div class="glass p-6 rounded-3xl h-60">
+                    <canvas id="mainChart"></canvas>
                 </div>
-                <div id="inventory-list" class="space-y-2 max-h-96 overflow-y-auto pr-2"></div>
+                <div id="feed" class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                    </div>
             </div>
         </div>
     </main>
 
-    <div class="md:hidden fixed bottom-0 w-full glass p-4 flex justify-around z-[100]">
-        <a href="index.html" class="p-3 bg-indigo-600 rounded-xl">📊</a>
-        <a href="pos.html" class="p-3 text-slate-400">💳</a>
+    <div class="md:hidden fixed bottom-0 w-full glass border-t border-white/5 p-4 flex justify-around z-[100]">
+        <a href="index.html" class="p-2.5 bg-indigo-600 rounded-lg text-white">📊</a>
+        <a href="pos.html" class="p-2.5 text-slate-400">💳</a>
     </div>
 
     <script>
-        function verify() {
-            if(document.getElementById('pass-key').value.toUpperCase() === "WAYNE") {
+        // Restored Security Logic
+        function verifyAccess() {
+            const k = document.getElementById('pass-key').value;
+            if(k.toUpperCase() === "WAYNE") {
                 document.getElementById('auth-gate').style.display = 'none';
-                document.getElementById('app-content').style.opacity = '1';
+                document.getElementById('app-body').style.opacity = '1';
+                initSystem();
             }
         }
 
@@ -112,43 +126,48 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        const scn = new Html5Qrcode("reader");
-        scn.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } }, (t) => {
-            document.getElementById('code').value = t;
-            if(navigator.vibrate) navigator.vibrate(50);
-        });
+        let chartInstance;
+        function initSystem() {
+            const scn = new Html5Qrcode("reader");
+            scn.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } }, (t) => {
+                document.getElementById('code').value = t;
+                if(navigator.vibrate) navigator.vibrate(50);
+            });
+        }
 
-        function sync() {
+        function syncData() {
             const n = document.getElementById('name').value, c = document.getElementById('code').value, q = parseInt(document.getElementById('qty').value), p = parseFloat(document.getElementById('price').value);
             if(n && q) {
-                db.ref('inventory').push({ name: n, code: c, qty: q, price: p });
+                db.ref('inventory').push({ name: n, code: c || "NO_CODE", qty: q, price: p || 0 });
                 ['name','code','qty','price'].forEach(i => document.getElementById(i).value = '');
             }
         }
 
-        let chart;
         db.ref('inventory').on('value', snap => {
             const data = snap.val() || {};
-            const list = document.getElementById('inventory-list');
-            list.innerHTML = '';
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
             const labels = [], values = [];
             for(let key in data) {
                 const i = data[key];
                 labels.push(i.name); values.push(i.qty);
-                list.innerHTML += `<div class="glass p-4 rounded-2xl flex justify-between items-center">
-                    <div><p class="text-[8px] font-mono text-indigo-400 uppercase">${i.code}</p><h4 class="text-xs font-black uppercase">${i.name}</h4></div>
-                    <div class="text-right"><p class="text-xs font-black">${i.qty} units</p><p class="text-[9px] text-slate-500">$${i.price}</p></div>
+                feed.innerHTML += `<div class="glass p-4 rounded-2xl flex justify-between items-center group hover:bg-white/5 transition-all">
+                    <div><p class="text-[8px] font-mono text-indigo-400 mb-1 uppercase">${i.code}</p><h4 class="text-[11px] font-black uppercase text-white">${i.name}</h4></div>
+                    <div class="text-right flex items-center gap-6">
+                        <div class="text-right"><p class="text-xs font-black text-white">${i.qty} UNITS</p><p class="text-[9px] text-slate-500">$${i.price}</p></div>
+                        <button onclick="db.ref('inventory/${key}').remove()" class="text-red-500 opacity-0 group-hover:opacity-100 transition-all font-black text-lg">×</button>
+                    </div>
                 </div>`;
             }
             updateChart(labels, values);
         });
 
         function updateChart(l, v) {
-            const ctx = document.getElementById('invChart');
-            if(chart) chart.destroy();
-            chart = new Chart(ctx, {
+            const ctx = document.getElementById('mainChart');
+            if(chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: l, datasets: [{ data: v, borderColor: '#6366f1', tension: 0.4, fill: true, backgroundColor: 'rgba(99,102,241,0.1)' }] },
+                data: { labels: l, datasets: [{ data: v, borderColor: '#6366f1', borderWidth: 2, tension: 0.4, fill: true, backgroundColor: 'rgba(99,102,241,0.05)', pointRadius: 0 }] },
                 options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 8 } } } } }
             });
         }
