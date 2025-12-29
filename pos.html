@@ -3,79 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wayne Core | POS</title>
+    <title>Wayne Core | Sales Terminal Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        body { background: #020617; color: white; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-        .active-payment { border: 2px solid #6366f1 !important; background: rgba(99, 102, 241, 0.1); }
-        #reader video { object-fit: cover !important; border-radius: 2rem; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        :root { --accent: #6366f1; --bg: #020617; }
+        body { background-color: var(--bg); color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.08); }
+        
+        #reader { border: none !important; width: 100% !important; border-radius: 2.5rem; overflow: hidden; background: #000; }
+        #reader video { object-fit: cover !important; height: 100% !important; width: 100% !important; }
+
+        .scan-overlay-system { position: relative; border-radius: 3rem; overflow: hidden; }
+        .bracket-box {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 200px; height: 120px; z-index: 50; pointer-events: none;
+        }
+        .b-corner { position: absolute; width: 35px; height: 35px; border: 4px solid var(--accent); }
+        .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 15px 0 0 0; }
+        .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 15px 0 0; }
+        .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 15px; }
+        .br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 15px 0; }
+        
+        .laser-line {
+            position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+            box-shadow: 0 0 10px #ef4444; animation: moveLaser 2.5s infinite linear;
+        }
+        @keyframes moveLaser { 0% { top: 0% } 50% { top: 100% } 100% { top: 0% } }
+
+        .pay-active { border: 2px solid #6366f1 !important; background: rgba(99, 102, 241, 0.1); }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="pb-32 lg:pb-0">
+<body class="flex flex-col md:flex-row min-h-screen pb-24 md:pb-0">
 
-    <div class="flex flex-col lg:flex-row min-h-screen">
-        
-        <nav class="fixed bottom-0 w-full lg:relative lg:w-80 glass p-6 flex flex-row lg:flex-col justify-around lg:justify-start gap-6 z-50">
-            <h2 class="hidden lg:block text-2xl font-black italic tracking-tighter uppercase mb-10">Wayne <span class="text-indigo-500 text-glow">POS</span></h2>
-            <a href="index.html" class="flex flex-col lg:flex-row items-center gap-4 p-4 rounded-3xl text-slate-500 font-black text-[10px] lg:text-sm">
-                <span>📦</span> <span class="hidden sm:inline">Inventory</span>
-            </a>
-            <a href="pos.html" class="flex flex-col lg:flex-row items-center gap-4 p-4 rounded-3xl bg-indigo-600 font-black text-[10px] lg:text-sm">
-                <span>🛒</span> <span class="hidden sm:inline">Sales Terminal</span>
-            </a>
-        </nav>
+    <nav class="fixed bottom-0 w-full md:relative md:w-80 glass border-t md:border-t-0 md:border-r border-white/5 flex flex-row md:flex-col p-4 md:p-10 justify-around md:justify-start gap-8 z-50">
+        <h2 class="hidden md:block text-2xl font-black italic uppercase mb-10">Wayne <span class="text-indigo-500">POS</span></h2>
+        <a href="index.html" class="flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2rem] text-slate-500 font-black text-[10px] md:text-sm">
+            <span>📦</span> <span>Inventory</span>
+        </a>
+        <a href="pos.html" class="flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2rem] bg-indigo-600 font-black text-[10px] md:text-sm shadow-xl shadow-indigo-500/20">
+            <span>🛒</span> <span>Terminal</span>
+        </a>
+    </nav>
 
-        <main class="flex-1 p-4 lg:p-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <main class="flex-1 p-4 md:p-12 lg:p-20 overflow-y-auto">
+        <header class="mb-16">
+            <h1 class="text-5xl font-black uppercase tracking-tighter italic">Sales <span class="text-indigo-500">Engine</span></h1>
+            <p class="text-slate-500 font-mono text-[9px] mt-2 uppercase tracking-[0.3em]">Operator: samwelwayne266</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
             
-            <div class="lg:col-span-8 space-y-6">
-                <div id="reader" class="glass rounded-[3rem] h-52 bg-black border border-indigo-500/20 relative overflow-hidden"></div>
-                
-                <div class="glass p-8 rounded-[3rem]">
-                    <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-500">Global Search</h4>
-                        <input type="text" id="p-search" oninput="renderProducts()" placeholder="SEARCH_DB..." class="bg-slate-900/50 border border-slate-800 px-6 py-3 rounded-2xl text-[10px] w-64 outline-none focus:border-indigo-500">
+            <div class="lg:col-span-7 space-y-10">
+                <div class="glass p-6 rounded-[3rem] scan-overlay-system">
+                    <div id="pos-reader" class="h-56"></div>
+                    <div class="bracket-box">
+                        <div class="b-corner tl"></div><div class="b-corner tr"></div>
+                        <div class="b-corner bl"></div><div class="b-corner br"></div>
+                        <div class="laser-line"></div>
                     </div>
-                    <div id="p-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-[350px] overflow-y-auto no-scrollbar">
-                        </div>
                 </div>
 
-                <div class="glass p-8 rounded-[3rem] min-h-[300px]">
-                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-6">Current Transaction</h4>
-                    <div id="cart-list" class="space-y-4"></div>
+                <div class="glass p-10 rounded-[3rem] min-h-[400px]">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-10">Current Transaction</h4>
+                    <div id="cart" class="space-y-4"></div>
+                </div>
+
+                <div class="glass p-10 rounded-[3rem]">
+                    <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-8">Recent History</h4>
+                    <div id="history-log" class="space-y-3 max-h-[250px] overflow-y-auto no-scroll"></div>
                 </div>
             </div>
 
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-5">
                 <div class="glass p-10 rounded-[3rem] sticky top-12 space-y-10">
                     <div>
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Payable</p>
-                        <h1 id="total-val" class="text-5xl font-black tracking-tighter text-indigo-400 font-mono">$0.00</h1>
+                        <p class="text-[10px] font-black text-slate-500 mb-2 uppercase">Amount Due</p>
+                        <h2 id="total-amount" class="text-6xl font-black text-indigo-400 tracking-tighter font-mono">$0.00</h2>
                     </div>
 
                     <div class="space-y-4">
-                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Payment Channel</p>
+                        <p class="text-[10px] font-black text-slate-500 uppercase">Payment Method</p>
                         <div class="grid gap-2">
-                            <button onclick="setMethod('CASH', this)" class="pay-btn w-full bg-slate-900 border border-slate-800 p-5 rounded-2xl text-[10px] font-black uppercase text-slate-500 active-payment">💵 Cash Disbursement</button>
-                            <button onclick="setMethod('MPESA', this)" class="pay-btn w-full bg-slate-900 border border-slate-800 p-5 rounded-2xl text-[10px] font-black uppercase text-slate-500">📱 M-Pesa Mobile Pay</button>
-                            <button onclick="setMethod('CARD', this)" class="pay-btn w-full bg-slate-900 border border-slate-800 p-5 rounded-2xl text-[10px] font-black uppercase text-slate-500">💳 Card Processing</button>
+                            <button onclick="setMethod('CASH', this)" class="pay-btn glass p-6 rounded-3xl text-[10px] font-black pay-active transition-all">💵 PHYSICAL CASH</button>
+                            <button onclick="setMethod('MPESA', this)" class="pay-btn glass p-6 rounded-3xl text-[10px] font-black transition-all">📱 M-PESA MOBILE</button>
+                            <button onclick="setMethod('CARD', this)" class="pay-btn glass p-6 rounded-3xl text-[10px] font-black transition-all">💳 BANK CARD</button>
                         </div>
                     </div>
 
-                    <button onclick="executeTransaction()" class="w-full bg-indigo-600 py-7 rounded-[2rem] font-black uppercase text-xs tracking-[0.3em] shadow-2xl shadow-indigo-500/30 hover:scale-[1.02] transition-all">Authorize Sale</button>
-                    
-                    <div id="receipt-log" class="text-[8px] font-mono text-slate-600 uppercase leading-relaxed text-center">
-                        Secure_Protocol: samwelwayne266_CORE<br>
-                        Ready for Next Scan...
-                    </div>
+                    <button onclick="checkoutSale()" class="w-full bg-indigo-600 py-8 rounded-[2.5rem] font-black uppercase text-xs tracking-[0.3em] shadow-2xl shadow-indigo-500/40 hover:scale-[1.02] transition-all">Authorize Sale</button>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 
     <script>
         const firebaseConfig = {
@@ -88,90 +113,77 @@
 
         let stock = {}, cart = [], payMethod = 'CASH';
 
-        db.ref('inventory').on('value', snap => {
-            stock = snap.val() || {};
-            renderProducts();
+        db.ref('inventory').on('value', snap => stock = snap.val() || {});
+
+        // RECTIFIED POS SCANNER
+        const posScanner = new Html5Qrcode("pos-reader");
+        posScanner.start({ facingMode: "environment" }, { 
+            fps: 30, 
+            qrbox: { width: 200, height: 120 } 
+        }, (t) => {
+            for(let k in stock) if(stock[k].code === t) addToCart(k);
+            if(navigator.vibrate) navigator.vibrate(50);
         });
 
-        const scanner = new Html5Qrcode("reader");
-        scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: 250 }, (code) => {
-            for(let key in stock) { if(stock[key].code === code) addToCart(key); }
-        });
-
-        function setMethod(m, el) {
+        function setMethod(m, b) {
             payMethod = m;
-            document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active-payment'));
-            el.classList.add('active-payment');
+            document.querySelectorAll('.pay-btn').forEach(x => x.classList.remove('pay-active'));
+            b.classList.add('pay-active');
         }
 
-        function renderProducts() {
-            const query = document.getElementById('p-search').value.toLowerCase();
-            const grid = document.getElementById('p-grid');
-            grid.innerHTML = '';
-            for (let key in stock) {
-                const item = stock[key];
-                if (item.name.toLowerCase().includes(query)) {
-                    grid.innerHTML += `
-                        <button onclick="addToCart('${key}')" class="bg-slate-900/40 p-5 rounded-3xl text-left border border-slate-800 hover:border-indigo-500 transition-all">
-                            <p class="text-[8px] font-black text-indigo-400 mb-1">${item.code}</p>
-                            <p class="text-xs font-black uppercase mb-3">${item.name}</p>
-                            <div class="flex justify-between items-center">
-                                <span class="text-xs font-black">$${item.price}</span>
-                                <span class="text-[9px] text-slate-600 font-bold">${item.qty} IN_STK</span>
-                            </div>
-                        </button>`;
-                }
-            }
-        }
-
-        function addToCart(key) {
-            const item = stock[key];
-            const inCart = cart.find(c => c.key === key);
-            if (item.qty <= (inCart ? inCart.qty : 0)) return alert("ERROR: STOCK_EXHAUSTED");
-            
-            if (inCart) inCart.qty++;
-            else cart.push({ ...item, key: key, qty: 1 });
+        function addToCart(k) {
+            const item = stock[k];
+            const inCart = cart.find(c => c.key === k);
+            if(item.qty <= (inCart ? inCart.qty : 0)) return alert("OUT OF STOCK");
+            if(inCart) inCart.qty++; else cart.push({...item, key: k, qty: 1});
             renderCart();
         }
 
         function renderCart() {
-            let total = 0;
-            const list = document.getElementById('cart-list');
-            list.innerHTML = cart.map((i, idx) => {
-                total += (i.qty * i.price);
-                return `
-                <div class="flex justify-between items-center p-5 bg-white/5 rounded-3xl border border-white/5">
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-white">${i.name}</p>
-                        <p class="text-[8px] font-mono text-slate-500">${i.qty} x $${i.price}</p>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <p class="text-sm font-black text-indigo-400">$${(i.qty * i.price).toFixed(2)}</p>
-                        <button onclick="cart.splice(${idx},1); renderCart();" class="text-red-500 text-2xl font-light">×</button>
-                    </div>
+            let t = 0;
+            const container = document.getElementById('cart');
+            container.innerHTML = cart.map((i, idx) => {
+                t += (i.qty * i.price);
+                return `<div class="flex justify-between p-6 bg-white/5 rounded-3xl text-sm font-bold border border-white/5">
+                    <div><p class="uppercase">${i.name}</p><p class="text-[10px] text-slate-500">${i.qty} units @ $${i.price}</p></div>
+                    <span class="text-indigo-400">$${(i.qty*i.price).toFixed(2)}</span>
                 </div>`;
             }).join('');
-            document.getElementById('total-val').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('total-amount').innerText = `$${t.toFixed(2)}`;
         }
 
-        function executeTransaction() {
-            if (!cart.length) return;
-            cart.forEach(i => {
-                db.ref('inventory/' + i.key).update({ qty: stock[i.key].qty - i.qty });
-            });
-
-            // LOG SALE
-            db.ref('history').push({
-                total: document.getElementById('total-val').innerText,
-                method: payMethod,
-                timestamp: Date.now(),
+        function checkoutSale() {
+            if(!cart.length) return;
+            const total = document.getElementById('total-amount').innerText;
+            
+            // Log Transaction
+            db.ref('sales').push({ 
+                total, 
+                method: payMethod, 
+                time: new Date().toLocaleTimeString(),
                 operator: "samwelwayne266"
             });
 
-            alert(`TRANSACTION_AUTHORIZED: Received via ${payMethod}`);
+            // Update Stock
+            cart.forEach(c => { 
+                db.ref('inventory/'+c.key).update({ qty: stock[c.key].qty - c.qty }); 
+            });
+
+            alert("SYSTEM: TRANSACTION_SUCCESSFUL");
             cart = []; renderCart();
         }
+
+        // Live History Sync
+        db.ref('sales').limitToLast(10).on('value', snap => {
+            const h = document.getElementById('history-log'); h.innerHTML = '';
+            const data = snap.val();
+            for(let k in data) {
+                h.innerHTML = `<div class="glass p-5 rounded-2xl flex justify-between text-[11px] font-mono border-l-2 border-indigo-500">
+                    <span class="text-slate-400">${data[k].time} - ${data[k].method}</span>
+                    <span class="font-black text-white">${data[k].total}</span>
+                </div>` + h.innerHTML;
+            }
+        });
     </script>
 </body>
 </html>
-
