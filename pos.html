@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wayne Core | Sales Engine</title>
+    <title>Wayne Core | Intelligent POS</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -14,9 +14,8 @@
     <style>
         :root { 
             --accent: #6366f1; 
-            --accent-glow: rgba(99, 102, 241, 0.4);
             --bg-deep: #020617; 
-            --glass-base: rgba(15, 23, 42, 0.98); 
+            --glass: rgba(15, 23, 42, 0.98); 
         }
 
         body { 
@@ -25,30 +24,28 @@
             font-family: 'Inter', sans-serif; 
             margin: 0; padding: 0;
             overflow-x: hidden;
-            overflow-y: auto;
+            overflow-y: auto; /* Re-enabled for mobile */
             -webkit-overflow-scrolling: touch;
-            min-height: 100vh;
         }
 
-        .glass-panel { 
-            background: var(--glass-base); 
-            backdrop-filter: blur(40px); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-        }
+        .glass-panel { background: var(--glass); backdrop-filter: blur(40px); border: 1px solid rgba(255, 255, 255, 0.08); }
 
-        /* --- UNIFIED SCANNER --- */
+        /* SCANNER UI */
         #pos-reader { border: none !important; width: 100% !important; border-radius: 1.5rem; overflow: hidden; background: #000; }
         .scanner-container { position: relative; border-radius: 2rem; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden; }
+        
+        /* BRACKETS */
         .brackets { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 240px; height: 140px; z-index: 50; pointer-events: none; }
         .brk { position: absolute; width: 30px; height: 30px; border: 3px solid #fff; filter: drop-shadow(0 0 10px var(--accent)); }
         .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
         .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
         .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
         .br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 12px 0; }
+        
         .laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #ef4444; animation: sweep 2.5s infinite linear; z-index: 51; }
         @keyframes sweep { 0%, 100% { top: 10% } 50% { top: 90% } }
 
-        /* --- COMPACT INTERFACE --- */
+        /* BUTTONS */
         .compact-btn {
             padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-size: 0.7rem; font-weight: 900; 
             text-transform: uppercase; letter-spacing: 0.15em; transition: 0.2s; cursor: pointer;
@@ -56,17 +53,21 @@
         .compact-btn:active { transform: scale(0.95); }
 
         .stock-card {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s ease;
         }
-        .stock-card:hover { border-color: var(--accent); background: rgba(99,102,241,0.05); }
 
-        /* Scrollbars */
+        .scroll-area { max-height: 450px; overflow-y: auto; padding-right: 8px; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
 
-        .scroll-area { max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 8px; }
+        /* SCAN FEEDBACK */
+        #scan-indicator {
+            position: absolute; top: 10px; right: 10px; padding: 4px 8px; 
+            background: #10b981; color: white; border-radius: 6px; font-size: 8px; 
+            font-weight: 900; opacity: 0; transition: opacity 0.3s; z-index: 60;
+        }
     </style>
 </head>
 <body class="flex flex-col md:flex-row">
@@ -77,22 +78,23 @@
             <p class="text-[8px] text-slate-500 font-mono mt-1 opacity-60">ID: samwelwayne266</p>
         </div>
         <div class="space-y-2">
-            <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl text-[10px] font-black text-slate-400 hover:bg-white/5 uppercase"><span>📊</span> Inventory Hub</a>
-            <a href="pos.html" class="bg-indigo-600 flex items-center gap-3 p-3 rounded-xl text-[10px] font-black text-white uppercase shadow-lg shadow-indigo-600/30"><span>💳</span> Sales Engine</a>
+            <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl text-[10px] font-black text-slate-400 hover:bg-white/5 uppercase">📊 Inventory</a>
+            <a href="pos.html" class="bg-indigo-600 flex items-center gap-3 p-3 rounded-xl text-[10px] font-black text-white uppercase shadow-lg">💳 Terminal</a>
         </div>
     </nav>
 
-    <main class="flex-1 md:ml-64 p-5 lg:p-12 mb-24 md:mb-0">
+    <main class="flex-1 md:ml-64 p-5 lg:p-12 mb-24">
         <header class="mb-10">
-            <p class="text-indigo-400 font-mono text-[9px] tracking-[0.5em] mb-1 uppercase">Transaction_Interface_v12</p>
-            <h1 class="text-5xl md:text-7xl font-black uppercase italic tracking-tighter">Sales <span class="text-indigo-500">Engine</span></h1>
+            <p class="text-indigo-400 font-mono text-[9px] tracking-[0.5em] mb-1 uppercase">Anti_Duplicate_Engine_v13</p>
+            <h1 class="text-5xl md:text-7xl font-black uppercase italic tracking-tighter">Terminal <span class="text-indigo-500">POS</span></h1>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             <div class="lg:col-span-4 space-y-6">
                 <div class="glass-panel p-4 scanner-container shadow-2xl border border-indigo-500/20">
-                    <p class="text-[8px] font-black uppercase text-indigo-400 mb-3 px-2 tracking-widest">Active Scan Matrix</p>
+                    <div id="scan-indicator">SCAN SUCCESS</div>
+                    <p class="text-[8px] font-black uppercase text-indigo-400 mb-3 px-2 tracking-widest">Debounced Scanner</p>
                     <div id="pos-reader" class="h-40 bg-slate-950"></div>
                     <div class="brackets">
                         <div class="brk tl"></div><div class="brk tr"></div>
@@ -103,30 +105,27 @@
 
                 <div class="glass-panel p-6 rounded-[2rem] border border-white/5">
                     <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Choose Items</h4>
-                        <input type="text" id="catalogSearch" oninput="filterCatalog()" placeholder="SEARCH..." class="bg-slate-900/50 border border-white/10 rounded-lg p-2 text-[10px] font-mono text-indigo-400 outline-none w-24 focus:w-32 transition-all">
+                        <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Direct Choice</h4>
+                        <input type="text" id="catalogSearch" oninput="filterCatalog()" placeholder="SEARCH STOCK..." class="bg-slate-900 border border-white/10 rounded-lg p-2 text-[9px] font-mono text-indigo-400 outline-none w-28">
                     </div>
-                    
                     <div id="catalog-list" class="scroll-area space-y-2">
-                        <div class="text-center py-10 opacity-30 text-[10px] font-bold uppercase italic">Loading Stock...</div>
-                    </div>
+                        </div>
                 </div>
             </div>
 
             <div class="lg:col-span-4 space-y-6">
-                <div class="glass-panel p-6 rounded-[2rem] min-h-[500px] border border-white/5 relative">
+                <div class="glass-panel p-6 rounded-[2rem] min-h-[500px] flex flex-col border border-white/5">
                     <div class="flex justify-between items-center mb-6">
-                        <h4 class="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Your Basket</h4>
-                        <button onclick="clearBasket()" class="text-[8px] font-black text-red-500/50 hover:text-red-500 uppercase transition-all">Reset Basket</button>
+                        <h4 class="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Active Basket</h4>
+                        <button onclick="clearBasket()" class="text-[8px] font-black text-red-500 uppercase">Clear</button>
                     </div>
                     
-                    <div id="cart" class="scroll-area space-y-3">
-                        <div class="text-center py-20 opacity-20 text-[10px] font-black uppercase tracking-widest italic">Basket is Empty</div>
-                    </div>
+                    <div id="cart" class="scroll-area flex-1 space-y-3">
+                        </div>
 
-                    <div class="absolute bottom-6 left-6 right-6 pt-4 border-t border-white/5 bg-slate-950/50 backdrop-blur-md rounded-2xl p-4">
-                        <div class="flex justify-between items-end">
-                            <p class="text-[9px] font-black text-slate-500 uppercase mb-1">Total Due</p>
+                    <div class="mt-4 pt-4 border-t border-white/5">
+                        <div class="flex justify-between items-end p-2">
+                            <p class="text-[9px] font-black text-slate-500 uppercase">Grand Total</p>
                             <h2 id="total" class="text-4xl font-black text-white font-mono">$0.00</h2>
                         </div>
                     </div>
@@ -134,23 +133,20 @@
             </div>
 
             <div class="lg:col-span-4">
-                <div class="glass-panel p-8 rounded-[2.5rem] sticky top-6 text-center space-y-8 shadow-2xl border border-indigo-500/10">
+                <div class="glass-panel p-8 rounded-[2.5rem] text-center space-y-8 shadow-2xl">
                     <div class="space-y-4">
-                        <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Select Payment Method</p>
+                        <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest">Payment Protocol</p>
                         <div class="grid grid-cols-1 gap-2">
-                            <button onclick="setMethod('CASH')" id="btn-CASH" class="payment-btn compact-btn border border-white/10 text-slate-400 hover:text-white bg-white/5">Cash</button>
-                            <button onclick="setMethod('CARD')" id="btn-CARD" class="payment-btn compact-btn border border-white/10 text-slate-400 hover:text-white bg-white/5">Debit/Credit Card</button>
-                            <button onclick="setMethod('MPESA')" id="btn-MPESA" class="payment-btn compact-btn border border-white/10 text-slate-400 hover:text-white bg-white/5">Mobile Money</button>
+                            <button onclick="setMethod('CASH')" id="btn-CASH" class="payment-btn compact-btn border border-white/10 bg-indigo-600 text-white">Cash Payment</button>
+                            <button onclick="setMethod('CARD')" id="btn-CARD" class="payment-btn compact-btn border border-white/10 text-slate-400 bg-white/5">Credit/Debit</button>
+                            <button onclick="setMethod('MPESA')" id="btn-MPESA" class="payment-btn compact-btn border border-white/10 text-slate-400 bg-white/5">M-Pesa / Mobile</button>
                         </div>
                     </div>
 
-                    <div class="pt-6">
-                        <button onclick="finalizeSale()" class="compact-btn w-full bg-indigo-600 py-6 text-[12px] shadow-xl shadow-indigo-900/40 text-white">Finalize Transaction</button>
-                    </div>
+                    <button onclick="finalizeSale()" class="compact-btn w-full bg-indigo-600 py-6 text-[12px] shadow-lg text-white">Confirm & Print</button>
                     
-                    <div class="pt-4 opacity-30">
-                        <p class="text-[8px] font-mono uppercase tracking-tighter">Secure_Gateway: samwelwayne266_CORE</p>
-                        <p class="text-[7px] font-mono uppercase mt-1">v12.0 Stable Build</p>
+                    <div class="pt-4 opacity-20 text-[7px] font-mono uppercase">
+                        Operator: samwelwayne266<br>Ref: CORE-V13-LOCKOUT
                     </div>
                 </div>
             </div>
@@ -170,8 +166,8 @@
 
     <script>
         /**
-         * WAYNE CORE SALES ENGINE LOGIC
-         * Hybrid Selection System: Scan OR Tap.
+         * WAYNE CORE v13.0.2 - DEBOUNCE LOGIC
+         * Prevents multi-scanning by locking the code until it's "cleared" from view.
          */
         const firebaseConfig = { 
             apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
@@ -183,49 +179,56 @@
 
         let stock = {}, basket = [], currentMethod = 'CASH';
 
-        // 1. Fetch Inventory & Render Catalog
+        // DEBOUNCE VARIABLES
+        let lastScannedCode = null;
+        let isScanLocked = false;
+        let lockTimeout = null;
+
+        // 1. Database Load
         db.ref('inventory').on('value', snap => {
             stock = snap.val() || {};
             renderCatalog();
         });
 
-        // 2. Render Catalog (Items you choose to place in basket)
+        // 2. Rendering Catalog
         function renderCatalog(filter = "") {
             const list = document.getElementById('catalog-list');
             list.innerHTML = '';
-            
             for(let key in stock) {
                 const item = stock[key];
                 if(item.name.toLowerCase().includes(filter.toLowerCase()) || item.code.includes(filter)) {
-                    if(item.qty <= 0) continue; // Skip out of stock items
-
+                    if(item.qty <= 0) continue;
                     const div = document.createElement('div');
                     div.className = "stock-card p-3 rounded-xl flex justify-between items-center cursor-pointer active:scale-95";
                     div.onclick = () => addToBasket(key);
                     div.innerHTML = `
                         <div class="flex flex-col">
                             <span class="text-[10px] font-black text-white uppercase">${item.name}</span>
-                            <span class="text-[7px] font-mono text-slate-500">${item.code}</span>
+                            <span class="text-[7px] font-mono text-slate-500 uppercase">${item.code}</span>
                         </div>
                         <div class="text-right">
                             <p class="text-[10px] font-black text-indigo-400">$${item.price.toFixed(2)}</p>
-                            <p class="text-[8px] font-bold text-slate-600">${item.qty} IN STOCK</p>
-                        </div>
-                    `;
+                            <p class="text-[8px] font-bold text-slate-700">${item.qty} STK</p>
+                        </div>`;
                     list.appendChild(div);
                 }
             }
         }
 
-        // 3. Search Functionality
         function filterCatalog() {
-            const query = document.getElementById('catalogSearch').value;
-            renderCatalog(query);
+            renderCatalog(document.getElementById('catalogSearch').value);
         }
 
-        // 4. Barcode Scanning Logic
+        // 3. ENHANCED SCANNER LOGIC (Anti-Duplicate)
         const scanner = new Html5Qrcode("pos-reader");
+        
         scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 240, height: 140 } }, (text) => {
+            // Check if this is the same code scanned a second ago
+            if (isScanLocked && text === lastScannedCode) {
+                return; // Block the scan
+            }
+
+            // Logic to process scan
             let foundKey = null;
             for(let key in stock) {
                 if(stock[key].code === text) {
@@ -233,73 +236,45 @@
                     break;
                 }
             }
+
             if(foundKey) {
+                // LOCK SYSTEM
+                isScanLocked = true;
+                lastScannedCode = text;
+                
+                // Show visual feedback
+                const indicator = document.getElementById('scan-indicator');
+                indicator.style.opacity = '1';
+                setTimeout(() => indicator.style.opacity = '0', 800);
+
                 addToBasket(foundKey);
-                if(navigator.vibrate) navigator.vibrate(50);
+                if(navigator.vibrate) navigator.vibrate(80);
+
+                // RESET LOCK after 2.5 seconds or once code is different
+                clearTimeout(lockTimeout);
+                lockTimeout = setTimeout(() => {
+                    isScanLocked = false;
+                }, 2500); 
             }
         });
 
-        // 5. Basket Operations
+        // 4. Basket Management
         function addToBasket(key) {
             const item = stock[key];
             const existing = basket.find(b => b.key === key);
-
             if(existing) {
-                if(existing.qty < item.qty) {
-                    existing.qty++;
-                } else {
-                    alert("MAXIMUM STOCK REACHED FOR: " + item.name);
-                }
+                if(existing.qty < item.qty) existing.qty++;
+                else alert("STOCKS EXHAUSTED");
             } else {
                 basket.push({ ...item, key: key, qty: 1 });
             }
             renderCart();
         }
 
-        function removeFromBasket(idx) {
-            basket.splice(idx, 1);
-            renderCart();
-        }
-
-        function renderCart() {
-            let grand = 0;
-            const cartDiv = document.getElementById('cart');
-            
-            if(basket.length === 0) {
-                cartDiv.innerHTML = `<div class="text-center py-20 opacity-20 text-[10px] font-black uppercase tracking-widest italic">Basket is Empty</div>`;
-                document.getElementById('total').innerText = `$0.00`;
-                return;
-            }
-
-            cartDiv.innerHTML = basket.map((i, index) => {
-                grand += (i.qty * i.price);
-                return `
-                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 group">
-                        <div class="flex-1">
-                            <p class="text-[10px] font-black text-white uppercase">${i.name}</p>
-                            <div class="flex items-center gap-2 mt-1">
-                                <button onclick="adjustQty(${index}, -1)" class="w-5 h-5 bg-slate-800 rounded flex items-center justify-center text-[10px]">-</button>
-                                <span class="text-[10px] font-mono text-indigo-400">${i.qty}</span>
-                                <button onclick="adjustQty(${index}, 1)" class="w-5 h-5 bg-slate-800 rounded flex items-center justify-center text-[10px]">+</button>
-                                <span class="text-[8px] text-slate-500 ml-2">@ $${i.price.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div class="text-right ml-4">
-                            <span class="text-[11px] font-black text-indigo-200">$${(i.qty * i.price).toFixed(2)}</span>
-                            <button onclick="removeFromBasket(${index})" class="block text-red-500/30 hover:text-red-500 text-[14px] font-black mt-1">×</button>
-                        </div>
-                    </div>`;
-            }).join('');
-            document.getElementById('total').innerText = `$${grand.toFixed(2)}`;
-        }
-
         function adjustQty(index, delta) {
             const bItem = basket[index];
-            const sItem = stock[bItem.key];
-            
             if(delta > 0) {
-                if(bItem.qty < sItem.qty) bItem.qty++;
-                else alert("MAX STOCK REACHED");
+                if(bItem.qty < stock[bItem.key].qty) bItem.qty++;
             } else {
                 bItem.qty--;
                 if(bItem.qty <= 0) basket.splice(index, 1);
@@ -307,44 +282,62 @@
             renderCart();
         }
 
-        function clearBasket() {
-            if(confirm("WIPE CURRENT SESSION?")) {
-                basket = [];
-                renderCart();
+        function renderCart() {
+            let total = 0;
+            const cartDiv = document.getElementById('cart');
+            if(!basket.length) {
+                cartDiv.innerHTML = `<div class="text-center py-20 opacity-20 text-[9px] uppercase font-black tracking-[0.2em]">Basket Empty</div>`;
+                document.getElementById('total').innerText = `$0.00`;
+                return;
             }
+            cartDiv.innerHTML = basket.map((i, index) => {
+                total += (i.qty * i.price);
+                return `
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5 group">
+                        <div class="flex-1">
+                            <p class="text-[10px] font-black text-white uppercase tracking-tighter">${i.name}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <button onclick="adjustQty(${index}, -1)" class="w-6 h-6 bg-slate-800 rounded-lg text-xs font-bold">-</button>
+                                <span class="text-[10px] font-mono text-indigo-400 w-4 text-center">${i.qty}</span>
+                                <button onclick="adjustQty(${index}, 1)" class="w-6 h-6 bg-slate-800 rounded-lg text-xs font-bold">+</button>
+                                <span class="text-[8px] text-slate-500 ml-2">@ $${i.price}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[11px] font-black text-indigo-300">$${(i.qty * i.price).toFixed(2)}</span>
+                            <button onclick="basket.splice(${index}, 1); renderCart();" class="block text-red-500/20 hover:text-red-500 text-[16px] mt-1 ml-auto">×</button>
+                        </div>
+                    </div>`;
+            }).join('');
+            document.getElementById('total').innerText = `$${total.toFixed(2)}`;
         }
 
-        // 6. Payment Selection Logic
+        function clearBasket() { basket = []; renderCart(); }
+
+        // 5. Checkout
         function setMethod(m) {
             currentMethod = m;
             document.querySelectorAll('.payment-btn').forEach(b => {
-                b.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-500');
-                b.classList.add('bg-white/5', 'text-slate-400');
+                b.classList.replace('bg-indigo-600', 'bg-white/5');
+                b.classList.replace('text-white', 'text-slate-400');
             });
             const active = document.getElementById('btn-' + m);
-            active.classList.add('bg-indigo-600', 'text-white', 'border-indigo-500');
-            active.classList.remove('bg-white/5', 'text-slate-400');
+            active.classList.replace('bg-white/5', 'bg-indigo-600');
+            active.classList.replace('text-slate-400', 'text-white');
         }
 
-        // 7. Final Transaction (Deducts stock from Firebase)
         function finalizeSale() {
-            if(!basket.length) return alert("BASKET IS EMPTY");
-            
+            if(!basket.length) return alert("NO ITEMS IN BASKET");
             const updates = {};
             basket.forEach(b => {
-                const currentStock = stock[b.key].qty;
-                updates['inventory/' + b.key + '/qty'] = currentStock - b.qty;
+                updates['inventory/' + b.key + '/qty'] = stock[b.key].qty - b.qty;
             });
-
             db.ref().update(updates).then(() => {
-                alert("TRANSACTION SUCCESSFUL via " + currentMethod);
+                alert("SALE COMPLETE (" + currentMethod + ")");
                 basket = [];
                 renderCart();
-            }).catch(err => alert("CLOUD_SYNC_FAILURE: " + err.message));
+            });
         }
-
-        // Set default payment
-        setMethod('CASH');
     </script>
 </body>
 </html>
