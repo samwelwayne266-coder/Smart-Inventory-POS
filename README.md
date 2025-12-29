@@ -51,7 +51,7 @@ The UI is engineered for field use:
 ## 💻 Installation & Deployment
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/samwelwayne266/wayne-core.git](https://github.com/samwelwayne266/wayne-core.git)
+    git clone [https://github.com/samwelwayne266-coder/smart-inventory-pos.git](https://github.com/samwelwayne266-coder/smart-inventory-pos.git)
     ```
 2.  **Configure Firebase:**
     Update the `firebaseConfig` object in both `index.html` and `pos.html` with your proprietary keys.
