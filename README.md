@@ -1,4 +1,9 @@
 # 🌌 Wayne Core | Quantum Logistics & POS Ecosystem
+
+![Status](https://img.shields.io/badge/STATUS-OPERATIONAL-emerald?style=for-the-badge&logo=statuspage)
+![License](https://img.shields.io/badge/SECURITY-ENCRYPTED-indigo?style=for-the-badge&logo=auth0)
+![Platform](https://img.shields.io/badge/PLATFORM-WEB_/_MOBILE-white?style=for-the-badge&logo=googlechrome)
+
 **Operator ID:** samwelwayne266  
 **System Version:** 13.0.2 (Enterprise Stable)  
 **Security Tier:** Level 5 (Auth-Gated)
