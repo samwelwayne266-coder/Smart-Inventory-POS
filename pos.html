@@ -3,184 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wayne Core | Sales Terminal Engine</title>
-
+    <title>Wayne Core | Sales Engine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-
     <style>
-        :root { --accent: #6366f1; --bg-deep: #020617; --glass-base: rgba(15, 23, 42, 0.95); }
-        body { background-color: var(--bg-deep); color: #f8fafc; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        :root { --accent: #6366f1; --bg: #020617; --glass: rgba(15, 23, 42, 0.95); }
+        body { background-color: var(--bg); color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.08); }
         
-        /* SYNCHRONIZED PANEL DESIGN */
-        .glass-panel { 
-            background: var(--glass-base); 
-            backdrop-filter: blur(35px); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
-        }
+        /* UNIFIED SCANNER SYSTEM */
+        #pos-reader { border: none !important; width: 100% !important; border-radius: 2rem; overflow: hidden; background: #000; }
+        .scan-box { position: relative; border-radius: 2.5rem; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden; }
+        .brackets { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 160px; z-index: 50; pointer-events: none; }
+        .brk { position: absolute; width: 30px; height: 30px; border: 3px solid #fff; filter: drop-shadow(0 0 8px var(--accent)); }
+        .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; }
+        .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 10px 0 0; }
+        .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 10px; }
+        .br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 10px 0; }
+        .laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #ef4444; box-shadow: 0 0 15px #ef4444; animation: sweep 2.5s infinite linear; z-index: 51; }
+        @keyframes sweep { 0%, 100% { top: 10%; } 50% { top: 90%; } }
 
-        /* IDENTICAL BRACKET SYSTEM */
-        #pos-reader { border: none !important; width: 100% !important; border-radius: 2.5rem; overflow: hidden; background: #000; }
-        #pos-reader video { object-fit: cover !important; height: 100% !important; width: 100% !important; }
-        .scanner-container { position: relative; border-radius: 3.5rem; overflow: hidden; border: 2px solid rgba(99, 102, 241, 0.15); }
-        .bracket-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 160px; z-index: 50; pointer-events: none; }
-        .corner-bracket { position: absolute; width: 45px; height: 45px; border: 4px solid #fff; filter: drop-shadow(0 0 10px var(--accent)); }
-        .top-left { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 20px 0 0 0; }
-        .top-right { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 20px 0 0; }
-        .bottom-left { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 20px; }
-        .bottom-right { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 20px 0; }
-        .scanning-laser { position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, #ef4444, #ef4444, transparent); box-shadow: 0 0 15px #ef4444; animation: laserSweep 2.8s infinite ease-in-out; z-index: 51; }
-        @keyframes laserSweep { 0% { top: 5% } 50% { top: 95% } 100% { top: 5% } }
-
-        .nav-link { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .active-link { background: #6366f1 !important; box-shadow: 0 15px 35px rgba(99, 102, 241, 0.5); transform: scale(1.02); }
-        ::-webkit-scrollbar { display: none; }
+        /* COMPACT NAVIGATION */
+        .nav-btn { transition: 0.3s; border: 1px solid transparent; }
+        .nav-active { background: #6366f1 !important; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        .small-btn { padding: 0.75rem 1.5rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
+        ::-webkit-scrollbar { width: 4px; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen pb-24 md:pb-0">
+<body class="flex flex-col md:flex-row min-h-screen">
 
-    <nav class="fixed bottom-0 w-full md:relative md:w-80 glass-panel border-t md:border-t-0 md:border-r border-white/5 flex flex-row md:flex-col p-4 md:p-10 justify-around md:justify-start gap-8 z-[100]">
-        <div class="hidden md:block mb-10">
-            <h2 class="text-3xl font-black italic tracking-tighter uppercase text-white">Wayne <span class="text-indigo-500">POS</span></h2>
-            <p class="text-[9px] font-mono mt-2 opacity-60 uppercase">Op: samwelwayne266</p>
+    <nav class="hidden md:flex flex-col w-64 glass p-6 border-r border-white/5 gap-4">
+        <div class="mb-8">
+            <h2 class="text-xl font-black italic uppercase">Wayne <span class="text-indigo-500">POS</span></h2>
+            <p class="text-[9px] text-slate-500 font-mono">OP: samwelwayne266</p>
         </div>
-
-        <div class="flex md:flex-col gap-5 w-full">
-            <a href="index.html" class="nav-link flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/5 text-slate-400 font-black text-[10px] md:text-sm">
-                <span class="text-xl">📊</span> <span>Dashboard</span>
-            </a>
-            <a href="pos.html" class="nav-link active-link flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2.5rem] font-black text-[10px] md:text-sm">
-                <span class="text-xl">💳</span> <span>Sales Terminal</span>
-            </a>
-            <a href="#" class="nav-link hidden md:flex flex-col md:flex-row items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/5 text-slate-400 font-black text-sm">
-                <span class="text-xl">⚙️</span> <span>System Config</span>
-            </a>
-        </div>
+        <a href="index.html" class="nav-btn flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/5"><span>📊</span> Dashboard</a>
+        <a href="pos.html" class="nav-btn nav-active flex items-center gap-3 p-3 rounded-xl text-xs font-bold"><span>💳</span> Terminal</a>
     </nav>
 
-    <main class="flex-1 p-6 md:p-16 lg:p-24 overflow-y-auto">
-        <header class="mb-16">
-            <p class="text-indigo-400 font-mono text-[10px] tracking-[0.5em] mb-3 uppercase opacity-70">Sales_Terminal_Engine_v8.0</p>
-            <h1 class="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white">Sales <span class="text-indigo-500">Engine</span></h1>
+    <main class="flex-1 p-6 lg:p-12 overflow-y-auto">
+        <header class="mb-8">
+            <h1 class="text-4xl font-black uppercase italic tracking-tighter">Sales <span class="text-indigo-500">Engine</span></h1>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            <div class="lg:col-span-6 space-y-12">
-                <div class="glass-panel p-8 rounded-[3.5rem] scanner-container">
-                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-6 px-2">Asset Capture Terminal</p>
-                    <div id="pos-reader" class="h-64"></div>
-                    <div class="bracket-overlay">
-                        <div class="corner-bracket top-left"></div><div class="corner-bracket top-right"></div>
-                        <div class="corner-bracket bottom-left"></div><div class="corner-bracket bottom-right"></div>
-                        <div class="scanning-laser"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-5 space-y-6">
+                <div class="glass p-4 scan-box">
+                    <div id="pos-reader" class="h-48"></div>
+                    <div class="brackets">
+                        <div class="brk tl"></div><div class="brk tr"></div>
+                        <div class="brk bl"></div><div class="brk br"></div>
+                        <div class="laser"></div>
                     </div>
                 </div>
 
-                <div class="glass-panel p-12 rounded-[4rem] min-h-[450px]">
-                    <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em] mb-10">Active Transaction Basket</h4>
-                    <div id="activeCart" class="space-y-5">
-                        </div>
+                <div class="glass p-6 rounded-3xl min-h-[300px]">
+                    <h4 class="text-[9px] font-black uppercase text-slate-500 mb-4">Transaction Basket</h4>
+                    <div id="cart" class="space-y-2"></div>
                 </div>
             </div>
 
-            <div class="lg:col-span-6">
-                <div class="glass-panel p-16 rounded-[4rem] sticky top-10 space-y-12">
+            <div class="lg:col-span-7">
+                <div class="glass p-10 rounded-[2.5rem] sticky top-0 text-center space-y-8">
                     <div>
-                        <p class="text-[11px] font-black text-slate-500 mb-3 uppercase tracking-widest">Aggregate Total Due</p>
-                        <h2 id="totalAmount" class="text-7xl md:text-9xl font-black text-indigo-400 tracking-tighter font-mono">$0.00</h2>
+                        <p class="text-[10px] font-black text-slate-500 uppercase">Grand Total</p>
+                        <h2 id="total" class="text-7xl font-black text-indigo-400 font-mono tracking-tighter">$0.00</h2>
                     </div>
-                    
-                    <div class="pt-10 border-t border-white/5">
-                        <button onclick="finalizeTransaction()" class="w-full bg-indigo-600 py-12 rounded-[3.5rem] font-black uppercase text-sm tracking-[0.5em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95">Complete Sale</button>
-                    </div>
-                    
-                    <p class="text-[9px] font-mono text-slate-600 uppercase text-center tracking-[0.2em]">Wayne_Core_Security_Protocol_Alpha</p>
+                    <button onclick="checkout()" class="small-btn w-full bg-indigo-600 text-white shadow-xl py-6">Complete Transaction</button>
+                    <p class="text-[8px] font-mono text-slate-600 uppercase">Secure_Gateway: Wayne_POS_v9</p>
                 </div>
             </div>
         </div>
     </main>
 
+    <div class="md:hidden fixed bottom-0 w-full glass p-4 flex justify-around z-[100]">
+        <a href="index.html" class="p-3 text-slate-400">📊</a>
+        <a href="pos.html" class="p-3 bg-indigo-600 rounded-xl">💳</a>
+    </div>
+
     <script>
-        /**
-         * WAYNE POS OPERATIONAL ENGINE
-         * Manages transaction state and real-time inventory deduction.
-         */
-        const firebaseConfig = { 
-            apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
-            databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", 
-            projectId: "wayne-quantum" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", projectId: "wayne-quantum" };
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const db = firebase.database();
 
-        let inventoryCache = {};
-        let currentBasket = [];
+        let stock = {}, cart = [];
+        db.ref('inventory').on('value', snap => stock = snap.val() || {});
 
-        database.ref('inventory').on('value', snap => inventoryCache = snap.val() || {});
-
-        const posScanner = new Html5Qrcode("pos-reader");
-        posScanner.start({ facingMode: "environment" }, { 
-            fps: 30, 
-            qrbox: { width: 260, height: 160 } 
-        }, (scannedCode) => {
-            processScan(scannedCode);
+        const scn = new Html5Qrcode("pos-reader");
+        scn.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } }, (t) => {
+            for(let k in stock) if(stock[k].code === t) addToCart(k);
             if(navigator.vibrate) navigator.vibrate(50);
-        }).catch(err => console.error("Hardware Capture Error:", err));
+        });
 
-        function processScan(code) {
-            for(let key in inventoryCache) {
-                if(inventoryCache[key].code === code) {
-                    const existing = currentBasket.find(i => i.id === key);
-                    if(existing) {
-                        existing.qty++;
-                    } else {
-                        currentBasket.push({
-                            id: key,
-                            name: inventoryCache[key].name,
-                            price: inventoryCache[key].price,
-                            qty: 1
-                        });
-                    }
-                    renderBasket();
-                    return;
-                }
-            }
+        function addToCart(k) {
+            const item = stock[k];
+            const inCart = cart.find(c => c.key === k);
+            if(inCart) inCart.qty++; else cart.push({...item, key: k, qty: 1});
+            render();
         }
 
-        function renderBasket() {
-            let total = 0;
-            const basketDiv = document.getElementById('activeCart');
-            basketDiv.innerHTML = currentBasket.map(item => {
-                total += (item.qty * item.price);
-                return `
-                    <div class="flex justify-between p-8 bg-white/5 rounded-[2.5rem] border border-white/5">
-                        <div>
-                            <p class="text-[12px] font-black uppercase text-white mb-1">${item.name}</p>
-                            <p class="text-[9px] font-mono text-slate-500">${item.qty} UNITS x $${item.price.toFixed(2)}</p>
-                        </div>
-                        <span class="text-indigo-400 font-black">$${(item.qty * item.price).toFixed(2)}</span>
-                    </div>`;
+        function render() {
+            let t = 0;
+            const c = document.getElementById('cart');
+            c.innerHTML = cart.map(i => {
+                t += (i.qty * i.price);
+                return `<div class="flex justify-between p-4 bg-white/5 rounded-2xl border border-white/5 text-xs font-bold">
+                    <div><p class="uppercase">${i.name}</p><p class="text-[9px] text-slate-500">${i.qty} units</p></div>
+                    <span class="text-indigo-400">$${(i.qty*i.price).toFixed(2)}</span>
+                </div>`;
             }).join('');
-            document.getElementById('totalAmount').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('total').innerText = `$${t.toFixed(2)}`;
         }
 
-        function finalizeTransaction() {
-            if(!currentBasket.length) return;
-            
-            currentBasket.forEach(saleItem => {
-                const stockQty = inventoryCache[saleItem.id].qty;
-                database.ref('inventory/' + saleItem.id).update({
-                    qty: stockQty - saleItem.qty
-                });
-            });
-
-            alert("SYSTEM: TRANSACTION_FINALIZED_SUCCESSFULLY");
-            currentBasket = [];
-            renderBasket();
+        function checkout() {
+            if(!cart.length) return;
+            cart.forEach(c => db.ref('inventory/'+c.key).update({ qty: stock[c.key].qty - c.qty }));
+            alert("TRANSACTION SUCCESSFUL");
+            cart = []; render();
         }
     </script>
 </body>
