@@ -3,23 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Wayne Core | Master Inventory Intelligence</title>
+    <title>Wayne Core | Master Inventory Hub</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;500&family=Inter:wght@300;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
         :root { 
             --accent: #6366f1; 
-            --accent-glow: rgba(99, 102, 241, 0.4);
-            --danger: #ef4444;
+            --accent-glow: rgba(99, 102, 241, 0.5);
             --bg-deep: #020617; 
-            --glass: rgba(15, 23, 42, 0.9); 
-            --border-glow: rgba(255, 255, 255, 0.08);
+            --glass-base: rgba(15, 23, 42, 0.95); 
         }
 
         body { 
@@ -27,241 +25,207 @@
             color: #f8fafc; 
             font-family: 'Inter', sans-serif; 
             overflow-x: hidden;
-            letter-spacing: -0.01em;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* --- QUANTUM UI DESIGN SYSTEM --- */
-        .glass { 
-            background: var(--glass); 
-            backdrop-filter: blur(30px); 
-            border: 1px solid var(--border-glow); 
-            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+        /* --- QUANTUM GLASSMORPHISM ENGINE --- */
+        .glass-panel { 
+            background: var(--glass-base); 
+            backdrop-filter: blur(35px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .font-mono { font-family: 'Fira Code', monospace; }
+        /* --- UNIFIED SCANNING SYSTEM --- */
+        #inventory-reader { border: none !important; width: 100% !important; border-radius: 2.5rem; overflow: hidden; background: #000; }
+        #inventory-reader video { object-fit: cover !important; height: 100% !important; width: 100% !important; }
 
-        /* --- RECTIFIED OPTICAL SCANNER --- */
-        #reader { border: none !important; width: 100% !important; border-radius: 2.5rem; overflow: hidden; background: #000; }
-        #reader video { object-fit: cover !important; height: 100% !important; width: 100% !important; }
-
-        .scan-overlay-system {
-            position: relative; border-radius: 3rem; overflow: hidden;
-            border: 1px solid rgba(99, 102, 241, 0.2);
+        .scanner-container {
+            position: relative; border-radius: 3.5rem; overflow: hidden;
+            border: 2px solid rgba(99, 102, 241, 0.15);
         }
 
-        .bracket-box {
+        .bracket-overlay {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 250px; height: 150px; z-index: 50; pointer-events: none;
+            width: 260px; height: 160px; z-index: 50; pointer-events: none;
         }
 
-        .b-corner { position: absolute; width: 45px; height: 45px; border: 4px solid var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
-        .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 20px 0 0 0; }
-        .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 20px 0 0; }
-        .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 20px; }
-        .br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 20px 0; }
+        .corner-bracket { position: absolute; width: 45px; height: 45px; border: 4px solid #fff; filter: drop-shadow(0 0 10px var(--accent)); }
+        .top-left { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 20px 0 0 0; }
+        .top-right { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 20px 0 0; }
+        .bottom-left { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 20px; }
+        .bottom-right { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 20px 0; }
 
-        .laser-line {
+        .scanning-laser {
             position: absolute; top: 0; left: 0; width: 100%; height: 3px;
             background: linear-gradient(90deg, transparent, #ef4444, #ef4444, transparent);
-            box-shadow: 0 0 15px #ef4444; animation: moveLaser 3s infinite ease-in-out;
+            box-shadow: 0 0 15px #ef4444; animation: laserSweep 2.8s infinite ease-in-out;
             z-index: 51;
         }
-        @keyframes moveLaser { 0% { top: 0% } 50% { top: 100% } 100% { top: 0% } }
+        @keyframes laserSweep { 0% { top: 5% } 50% { top: 95% } 100% { top: 5% } }
 
-        /* --- ANIMATIONS & UTILITIES --- */
-        .nav-active { background: var(--accent) !important; box-shadow: 0 10px 25px var(--accent-glow); transform: scale(1.05); }
-        .low-stock-pulse { border-left: 4px solid var(--danger) !important; animation: pulseRed 2s infinite; }
-        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        /* --- NAVIGATION & INTERACTIVE ELEMENTS --- */
+        .nav-link { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
+        .active-link { background: #6366f1 !important; box-shadow: 0 15px 35px var(--accent-glow); transform: scale(1.02); }
         
+        .core-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        .core-input:focus { border-color: var(--accent); background: rgba(15, 23, 42, 0.95); box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen">
+<body class="flex flex-col md:flex-row min-h-screen pb-24 md:pb-0">
 
-    <div id="gate" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center p-8 text-center transition-all duration-1000">
-        <div class="mb-12">
-            <h1 class="text-5xl font-black italic tracking-tighter uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h1>
-            <p class="text-slate-600 font-mono text-[10px] mt-4 tracking-[0.5em]">OPERATOR: samwelwayne266 // ACCESS_LOCKED</p>
-        </div>
-        <div class="w-full max-w-sm space-y-4">
-            <input type="password" id="key-input" placeholder="ENTER ACCESS KEY" class="w-full bg-slate-900 border border-slate-800 p-6 rounded-[2rem] text-center font-mono text-indigo-400 outline-none focus:border-indigo-500 text-lg transition-all">
-            <button onclick="authenticate()" class="w-full bg-indigo-600 py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-indigo-500 shadow-2xl shadow-indigo-500/30 active:scale-95 transition-all">Validate Credentials</button>
-        </div>
-    </div>
-
-    <nav class="fixed bottom-0 w-full md:relative md:w-80 glass border-t md:border-t-0 md:border-r border-white/5 flex flex-row md:flex-col p-4 md:p-10 justify-around md:justify-start gap-8 z-50">
+    <nav class="fixed bottom-0 w-full md:relative md:w-80 glass-panel border-t md:border-t-0 md:border-r border-white/5 flex flex-row md:flex-col p-4 md:p-10 justify-around md:justify-start gap-8 z-[100]">
         <div class="hidden md:block mb-10">
-            <h2 class="text-2xl font-black italic tracking-tighter uppercase">Wayne <span class="text-indigo-500">Core</span></h2>
-            <div class="flex items-center gap-2 mt-2">
+            <h2 class="text-3xl font-black italic tracking-tighter uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h2>
+            <div class="flex items-center gap-2 mt-2 opacity-60">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <p class="text-[9px] font-mono text-slate-500 uppercase">Status: Connected</p>
+                <p class="text-[9px] font-mono uppercase">Status: Connected</p>
             </div>
         </div>
 
-        <div class="flex md:flex-col gap-4 w-full">
-            <a href="index.html" class="nav-active flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2rem] font-black text-[10px] md:text-sm">
+        <div class="flex md:flex-col gap-5 w-full">
+            <a href="index.html" class="nav-link active-link flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2.5rem] font-black text-[10px] md:text-sm">
                 <span class="text-xl">📊</span> <span>Dashboard</span>
             </a>
-            <a href="pos.html" class="flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2rem] hover:bg-white/5 font-black text-[10px] md:text-sm text-slate-500 transition-all">
-                <span class="text-xl">🛒</span> <span>Terminal</span>
+            <a href="pos.html" class="nav-link flex flex-1 md:flex-none flex-col md:flex-row items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/5 text-slate-400 font-black text-[10px] md:text-sm">
+                <span class="text-xl">💳</span> <span>Sales Terminal</span>
             </a>
-        </div>
-
-        <div class="hidden md:block mt-auto glass p-8 rounded-[2.5rem] border-indigo-500/20">
-            <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Total Assets</p>
-            <h4 id="val-display" class="text-3xl font-black tracking-tighter text-white font-mono">$0.00</h4>
+            <a href="#" class="nav-link hidden md:flex flex-col md:flex-row items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/5 text-slate-400 font-black text-sm">
+                <span class="text-xl">⚙️</span> <span>System Config</span>
+            </a>
         </div>
     </nav>
 
-    <main id="app" class="flex-1 p-4 md:p-12 lg:p-20 overflow-y-auto">
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8">
-            <div>
-                <h1 class="text-5xl font-black uppercase tracking-tighter italic">Inventory <span class="text-indigo-500">Hub</span></h1>
-                <p class="text-slate-500 font-mono text-[10px] mt-2 uppercase tracking-[0.3em]">Cloud_Sync_Active // v7.5</p>
-            </div>
-            <button onclick="exportData()" class="bg-white text-black px-8 py-3 rounded-2xl font-black text-[10px] uppercase hover:bg-indigo-400 transition-all">Generate Report</button>
+    <main class="flex-1 p-6 md:p-16 lg:p-24 overflow-y-auto">
+        <header class="mb-16">
+            <p class="text-indigo-400 font-mono text-[10px] tracking-[0.5em] mb-3 uppercase opacity-70">Internal_Logistics_Matrix_v8.0</p>
+            <h1 class="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white">Inventory <span class="text-indigo-500">Hub</span></h1>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-            <div class="lg:col-span-5 space-y-10">
-                <div class="glass p-6 rounded-[3rem] scan-overlay-system">
-                    <div id="reader" class="h-64"></div>
-                    <div class="bracket-box">
-                        <div class="b-corner tl"></div><div class="b-corner tr"></div>
-                        <div class="b-corner bl"></div><div class="b-corner br"></div>
-                        <div class="laser-line"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+            <div class="lg:col-span-5 space-y-12">
+                <div class="glass-panel p-8 rounded-[3.5rem] scanner-container">
+                    <p class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-6 px-2">Asset Capture Terminal</p>
+                    <div id="inventory-reader" class="h-64 shadow-inner"></div>
+                    <div class="bracket-overlay">
+                        <div class="corner-bracket top-left"></div><div class="corner-bracket top-right"></div>
+                        <div class="corner-bracket bottom-left"></div><div class="corner-bracket bottom-right"></div>
+                        <div class="scanning-laser"></div>
                     </div>
                 </div>
 
-                <div class="glass p-10 rounded-[3rem] space-y-6">
-                    <h4 class="text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-4">Manual Registry</h4>
-                    <div class="space-y-4">
-                        <input type="text" id="name" placeholder="ITEM NAME" class="w-full bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-xs font-bold uppercase outline-none focus:border-indigo-500 transition-all">
-                        <input type="text" id="code" placeholder="UID_SCAN_CODE" class="w-full bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-xs font-mono text-indigo-300 outline-none">
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="number" id="qty" placeholder="QUANTITY" class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-xs font-bold outline-none">
-                            <input type="number" id="price" placeholder="UNIT PRICE" class="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl text-xs font-bold outline-none">
+                <div class="glass-panel p-12 rounded-[4rem] space-y-8">
+                    <div class="space-y-5">
+                        <input type="text" id="itemName" placeholder="ITEM NOMENCLATURE" class="core-input w-full p-7 rounded-3xl text-xs font-black uppercase outline-none">
+                        <input type="text" id="itemCode" placeholder="REGISTRY CODE (UID)" class="core-input w-full p-7 rounded-3xl text-xs font-mono text-indigo-300 outline-none">
+                        <div class="grid grid-cols-2 gap-5">
+                            <input type="number" id="itemQty" placeholder="STOCK QTY" class="core-input w-full p-7 rounded-3xl text-xs font-black outline-none">
+                            <input type="number" id="itemPrice" placeholder="MARKET PRICE" class="core-input w-full p-7 rounded-3xl text-xs font-black outline-none">
                         </div>
                     </div>
-                    <button onclick="commitToCloud()" class="w-full bg-indigo-600 py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.3em] hover:bg-indigo-400 transition-all shadow-xl shadow-indigo-500/20 active:scale-95">Push to Database</button>
+                    <button onclick="pushToCloud()" class="w-full bg-indigo-600 py-8 rounded-[3rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl hover:bg-indigo-500 transition-all active:scale-95">Sync to Cloud</button>
                 </div>
             </div>
 
-            <div class="lg:col-span-7 space-y-10">
-                <div class="glass p-10 rounded-[3rem]">
-                    <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-10">Stock Distribution Analytics</h4>
-                    <div class="h-64"><canvas id="analyticsChart"></canvas></div>
+            <div class="lg:col-span-7 space-y-12">
+                <div class="glass-panel p-12 rounded-[3.5rem]">
+                    <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-10">Real-Time Distribution</h4>
+                    <div class="h-72 w-full"><canvas id="stockVisualizer"></canvas></div>
                 </div>
-
-                <div class="space-y-6">
-                    <div class="flex justify-between items-center px-4">
-                        <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-widest">Global Asset Feed</h4>
-                        <span id="stat-count" class="text-[10px] font-mono text-indigo-400">TOTAL_ITEMS: 0</span>
+                <div id="registryFeed" class="space-y-5 max-h-[600px] overflow-y-auto pr-4">
                     </div>
-                    <div id="feed" class="space-y-4 max-h-[600px] overflow-y-auto no-scroll">
-                        </div>
-                </div>
             </div>
         </div>
     </main>
 
     <script>
         /**
-         * WAYNE CORE | SYSTEM SCRIPTS
-         * Logic provided for samwelwayne266
+         * WAYNE CORE OPERATIONAL LOGIC
+         * Handles real-time synchronization and optical intelligence.
          */
-        
-        function authenticate() {
-            if(document.getElementById('key-input').value.toUpperCase() === "WAYNE") {
-                document.getElementById('gate').style.transform = "translateY(-100%)";
-                setTimeout(() => document.getElementById('gate').style.display = 'none', 1000);
-            } else {
-                alert("ACCESS DENIED: ENCRYPTION MISMATCH");
-            }
-        }
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0",
-            databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com",
-            projectId: "wayne-quantum"
+        const firebaseConfig = { 
+            apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
+            databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", 
+            projectId: "wayne-quantum" 
         };
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const database = firebase.database();
 
-        let stockChart = null;
+        let masterChart = null;
 
-        // SCANNER REPAIR: Fixed aspect ratio and focus box
-        const qrScanner = new Html5Qrcode("reader");
-        qrScanner.start({ facingMode: "environment" }, { 
+        // HIGH-FIDELITY SCANNER INITIALIZATION
+        const invScanner = new Html5Qrcode("inventory-reader");
+        invScanner.start({ facingMode: "environment" }, { 
             fps: 30, 
-            qrbox: { width: 250, height: 150 } 
-        }, (text) => {
-            document.getElementById('code').value = text;
+            qrbox: { width: 260, height: 160 } 
+        }, (scannedText) => {
+            document.getElementById('itemCode').value = scannedText;
             if(navigator.vibrate) navigator.vibrate(50);
-        });
+        }).catch(err => console.error("Scanner Lock Failure:", err));
 
-        function commitToCloud() {
-            const n = document.getElementById('name').value.trim();
-            const c = document.getElementById('code').value.trim();
-            const q = parseInt(document.getElementById('qty').value);
-            const p = parseFloat(document.getElementById('price').value);
+        function pushToCloud() {
+            const name = document.getElementById('itemName').value;
+            const code = document.getElementById('itemCode').value;
+            const qty = parseInt(document.getElementById('itemQty').value);
+            const price = parseFloat(document.getElementById('itemPrice').value);
 
-            if(!n || isNaN(q)) return alert("CRITICAL: DATA_INCOMPLETE");
+            if(!name || isNaN(qty)) {
+                alert("CRITICAL: DATA_STREAM_INCOMPLETE");
+                return;
+            }
 
-            db.ref('inventory').push({
-                name: n,
-                code: c || "REG_MANUAL",
-                qty: q,
-                price: p || 0,
+            database.ref('inventory').push({
+                name: name,
+                code: code || "MNL_REGISTRY",
+                qty: qty,
+                price: price || 0,
                 timestamp: Date.now()
             });
 
-            ['name','code','qty','price'].forEach(id => document.getElementById(id).value = '');
+            ['itemName','itemCode','itemQty','itemPrice'].forEach(id => document.getElementById(id).value = '');
         }
 
-        db.ref('inventory').on('value', (snapshot) => {
+        database.ref('inventory').on('value', snapshot => {
             const data = snapshot.val() || {};
-            const feed = document.getElementById('feed');
-            let totalVal = 0, count = 0;
-            feed.innerHTML = '';
+            const container = document.getElementById('registryFeed');
+            container.innerHTML = '';
             
-            const labels = [], values = [];
+            const labels = [], counts = [];
 
-            for (let key in data) {
+            for(let key in data) {
                 const item = data[key];
-                totalVal += (item.qty * item.price);
-                count++;
-                
-                if(count <= 6) { labels.push(item.name); values.push(item.qty); }
+                labels.push(item.name);
+                counts.push(item.qty);
 
-                const lowStockClass = item.qty < 5 ? 'low-stock-pulse' : '';
-
-                feed.innerHTML += `
-                    <div class="glass p-6 rounded-[2.5rem] flex justify-between items-center group ${lowStockClass} hover:translate-x-2 transition-all">
-                        <div>
-                            <p class="text-[9px] font-mono text-indigo-400 uppercase mb-1">${item.code}</p>
-                            <h4 class="text-sm font-black uppercase text-white">${item.name}</h4>
+                container.innerHTML += `
+                    <div class="glass-panel p-8 rounded-[3rem] flex justify-between items-center group hover:bg-white/5 transition-all">
+                        <div class="flex flex-col">
+                            <p class="text-[9px] font-mono text-indigo-400 mb-2 uppercase tracking-tighter">${item.code}</p>
+                            <h5 class="text-md font-black uppercase text-white tracking-tight">${item.name}</h5>
                         </div>
-                        <div class="text-right flex items-center gap-8">
-                            <div>
-                                <p class="text-xs font-black text-white">${item.qty} UNITS</p>
-                                <p class="text-[9px] font-bold text-slate-500">$${item.price.toFixed(2)}</p>
+                        <div class="flex items-center gap-10">
+                            <div class="text-right">
+                                <p class="text-sm font-black text-white">${item.qty} UNITS</p>
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">$${item.price.toFixed(2)}</p>
                             </div>
-                            <button onclick="db.ref('inventory/${key}').remove()" class="text-slate-800 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 text-2xl">×</button>
+                            <button onclick="database.ref('inventory/${key}').remove()" class="text-red-500 opacity-0 group-hover:opacity-100 transition-all text-2xl hover:scale-125">×</button>
                         </div>
                     </div>`;
             }
-
-            document.getElementById('val-display').innerText = `$${totalVal.toLocaleString()}`;
-            document.getElementById('stat-count').innerText = `TOTAL_ITEMS: ${count}`;
-            updateChart(labels, values);
+            updateChart(labels, counts);
         });
 
         function updateChart(l, v) {
-            const ctx = document.getElementById('analyticsChart').getContext('2d');
-            if (stockChart) stockChart.destroy();
-            stockChart = new Chart(ctx, {
+            const ctx = document.getElementById('stockVisualizer').getContext('2d');
+            if(masterChart) masterChart.destroy();
+            masterChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: l,
@@ -278,7 +242,7 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 9 } } }
+                        x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 10 } } }
                     }
                 }
             });
