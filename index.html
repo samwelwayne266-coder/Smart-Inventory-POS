@@ -15,36 +15,42 @@
     <style>
         :root { 
             --accent: #6366f1; 
+            --accent-glow: rgba(99, 102, 241, 0.4);
             --bg-deep: #020617; 
-            --glass-base: rgba(15, 23, 42, 0.95); 
+            --glass-base: rgba(15, 23, 42, 0.98); 
         }
 
+        /* FIXED SCROLLING LOGIC */
         body { 
             background-color: var(--bg-deep); 
             color: #f8fafc; 
             font-family: 'Inter', sans-serif; 
-            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            overflow-y: auto; /* Re-enabled scrolling */
             -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
         }
 
-        /* --- GLASS ENGINE --- */
+        /* QUANTUM GLASSMORPHISM */
         .glass-panel { 
             background: var(--glass-base); 
-            backdrop-filter: blur(35px); 
+            backdrop-filter: blur(40px); 
             border: 1px solid rgba(255, 255, 255, 0.08); 
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
         }
 
-        /* --- UNIFIED SCANNER SYSTEM --- */
+        /* SCANNER INTERFACE */
         #inventory-reader { border: none !important; width: 100% !important; border-radius: 1.5rem; overflow: hidden; background: #000; }
-        .scanner-container { position: relative; border-radius: 2rem; overflow: hidden; border: 1px solid rgba(99, 102, 241, 0.2); }
+        .scanner-container { position: relative; border-radius: 2rem; overflow: hidden; border: 1px solid rgba(99, 102, 241, 0.3); }
         
         .bracket-overlay {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 260px; height: 160px; z-index: 50; pointer-events: none;
         }
 
-        .corner { position: absolute; width: 30px; height: 30px; border: 3px solid #fff; filter: drop-shadow(0 0 10px var(--accent)); }
+        .corner { position: absolute; width: 30px; height: 30px; border: 3px solid #fff; filter: drop-shadow(0 0 12px var(--accent)); }
         .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 12px 0 0 0; }
         .tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 12px 0 0; }
         .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 12px; }
@@ -53,80 +59,102 @@
         .laser {
             position: absolute; top: 10%; left: 0; width: 100%; height: 2px;
             background: #ef4444; box-shadow: 0 0 15px #ef4444; 
-            animation: laserSweep 2.8s infinite linear; z-index: 51;
+            animation: laserSweep 2.5s infinite linear; z-index: 51;
         }
         @keyframes laserSweep { 0%, 100% { top: 10% } 50% { top: 90% } }
 
-        /* --- COMPACT BUTTON ARCHITECTURE --- */
-        .nav-link { transition: all 0.3s ease; border: 1px solid transparent; }
-        .active-link { background: #6366f1 !important; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        /* COMPACT NAVIGATION CONTROLS */
+        .nav-link { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent; }
+        .active-link { background: var(--accent) !important; box-shadow: 0 8px 15px var(--accent-glow); }
         
         .compact-btn {
-            padding: 0.65rem 1.25rem; border-radius: 0.8rem; font-size: 0.75rem;
-            font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.7rem 1.4rem; border-radius: 0.75rem; font-size: 0.7rem;
+            font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em;
+            transition: all 0.2s; cursor: pointer;
         }
-        .compact-btn:active { transform: scale(0.95); }
+        .compact-btn:active { transform: scale(0.96); }
 
-        /* --- AUTH GATE --- */
+        /* AUTH GATE DESIGN */
         .auth-input { 
             background: #0f172a; border: 1px solid #1e293b; color: #6366f1; 
-            text-align: center; letter-spacing: 0.5em; border-radius: 1rem;
+            text-align: center; letter-spacing: 0.6em; border-radius: 1rem;
+            font-family: 'Fira Code', monospace;
         }
 
-        ::-webkit-scrollbar { width: 3px; }
+        /* CUSTOM SCROLLBARS FOR TOUCH */
+        .scroll-container {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+
+        #registry-feed { padding-bottom: 120px; } /* Mobile padding for bottom nav */
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen">
+<body class="flex flex-col md:flex-row">
 
     <div id="auth-gate" class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center p-6 text-center">
-        <div class="max-w-xs w-full space-y-6">
-            <h1 class="text-4xl font-black italic tracking-tighter uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h1>
-            <p class="text-[9px] font-mono text-slate-500 uppercase tracking-[0.4em]">samwelwayne266 // ACCESS_ENCRYPTED</p>
-            <input type="password" id="gate-pass" class="auth-input w-full p-4 outline-none focus:border-indigo-500 transition-all" placeholder="••••">
-            <button onclick="unlock()" class="compact-btn w-full bg-indigo-600">Authorize</button>
+        <div class="max-w-xs w-full space-y-8">
+            <div class="space-y-2">
+                <h1 class="text-4xl font-black italic tracking-tighter uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h1>
+                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-[0.4em]">samwelwayne266 // PROTECTED_HUB</p>
+            </div>
+            <div class="space-y-4">
+                <input type="password" id="gate-pass" class="auth-input w-full p-4 outline-none focus:border-indigo-500 transition-all" placeholder="••••">
+                <button onclick="unlock()" class="compact-btn w-full bg-indigo-600">Access Database</button>
+            </div>
+            <p class="text-[8px] text-slate-700 uppercase font-bold tracking-widest mt-10">Restricted to Wayne Core Personnel</p>
         </div>
     </div>
 
-    <nav class="hidden md:flex flex-col w-64 glass-panel border-r border-white/5 p-6 gap-3 z-[100]">
+    <nav class="hidden md:flex flex-col w-64 glass-panel border-r border-white/5 p-6 gap-3 z-[100] fixed h-full">
         <div class="mb-10">
             <h2 class="text-xl font-black italic uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h2>
-            <p class="text-[8px] text-slate-500 font-mono mt-1 opacity-60">OPERATOR: samwelwayne266</p>
+            <p class="text-[8px] text-slate-500 font-mono mt-1 opacity-60 uppercase">Registry_Admin: samwelwayne266</p>
         </div>
         
         <div class="space-y-2">
-            <a href="index.html" class="nav-link active-link flex items-center gap-3 p-3 rounded-xl text-[11px] font-bold text-white uppercase">
-                <span>📊</span> Dashboard
+            <a href="index.html" class="nav-link active-link flex items-center gap-3 p-3 rounded-xl text-[10px] font-black text-white uppercase tracking-tighter">
+                <span>📊</span> Overview Hub
             </a>
-            <a href="pos.html" class="nav-link flex items-center gap-3 p-3 rounded-xl text-[11px] font-bold text-slate-400 hover:bg-white/5 uppercase">
-                <span>💳</span> Terminal
+            <a href="pos.html" class="nav-link flex items-center gap-3 p-3 rounded-xl text-[10px] font-black text-slate-400 hover:bg-white/5 uppercase tracking-tighter">
+                <span>💳</span> Sales Terminal
             </a>
         </div>
 
         <div class="mt-auto p-4 bg-white/5 rounded-2xl border border-white/5">
-            <p class="text-[8px] font-mono text-slate-500">SYSTEM_STATUS: STABLE</p>
-            <p class="text-[8px] font-mono text-indigo-400 mt-1 uppercase">v11.5 Cloud_Active</p>
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-[8px] font-mono text-slate-400">CLOUD_LINK_STABLE</span>
+            </div>
+            <p class="text-[8px] font-mono text-slate-600 uppercase">v11.6.0 Stable_Build</p>
         </div>
     </nav>
 
-    <main id="main-view" class="flex-1 p-6 lg:p-12 overflow-y-auto opacity-0 transition-opacity duration-700">
-        <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <div>
-                <p class="text-indigo-400 font-mono text-[9px] tracking-[0.4em] mb-1 uppercase">Internal_Logistics_Module</p>
-                <h1 class="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">Inventory <span class="text-indigo-500">Hub</span></h1>
+    <main id="main-view" class="flex-1 md:ml-64 p-6 lg:p-12 opacity-0 transition-opacity duration-1000">
+        <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-1">
+                <p class="text-indigo-400 font-mono text-[9px] tracking-[0.5em] uppercase">Logistics_Management_System</p>
+                <h1 class="text-5xl md:text-7xl font-black uppercase italic tracking-tighter">Inventory <span class="text-indigo-500 text-6xl">Hub</span></h1>
             </div>
-            <div class="hidden md:block text-right">
-                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Database Entries</p>
-                <p id="total-count" class="text-2xl font-mono font-black text-indigo-500">000</p>
+            <div class="text-right">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">Database Population</p>
+                <p id="total-count" class="text-3xl font-mono font-black text-indigo-500">000</p>
             </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-4 space-y-6">
-                <div class="glass-panel p-4 scanner-container shadow-2xl">
-                    <p class="text-[8px] font-black uppercase text-indigo-400 mb-2 px-2">Asset Capture Terminal</p>
-                    <div id="inventory-reader" class="h-44"></div>
+                <div class="glass-panel p-4 scanner-container shadow-2xl border border-indigo-500/20">
+                    <div class="flex justify-between items-center mb-3 px-2">
+                        <p class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">Optical Asset Capture</p>
+                        <div class="flex gap-1">
+                            <div class="w-1 h-1 bg-red-500 rounded-full animate-ping"></div>
+                            <span class="text-[7px] text-slate-500 font-bold">LIVE_FEED</span>
+                        </div>
+                    </div>
+                    <div id="inventory-reader" class="h-44 bg-slate-950"></div>
                     <div class="bracket-overlay">
                         <div class="corner tl"></div><div class="corner tr"></div>
                         <div class="corner bl"></div><div class="corner br"></div>
@@ -134,54 +162,78 @@
                     </div>
                 </div>
 
-                <div class="glass-panel p-6 rounded-3xl space-y-4">
-                    <div class="space-y-3">
-                        <div>
-                            <label class="text-[8px] font-bold text-slate-500 uppercase ml-1">Optional nomenclature</label>
-                            <input type="text" id="itemName" placeholder="E.G. CORE PROCESSOR" class="w-full bg-slate-900 border border-white/5 p-3 rounded-xl text-[11px] font-bold outline-none focus:border-indigo-500">
+                <div class="glass-panel p-6 rounded-[2rem] space-y-5">
+                    <div class="space-y-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-tight ml-1">Asset Nomenclature (Optional)</label>
+                            <input type="text" id="itemName" placeholder="E.G. QUANTUM PROCESSOR" class="w-full bg-slate-900/50 border border-white/5 p-3.5 rounded-xl text-[11px] font-bold outline-none focus:border-indigo-500 transition-all text-white placeholder:text-slate-700">
                         </div>
-                        <div>
-                            <label class="text-[8px] font-bold text-slate-500 uppercase ml-1">Registry Code (UID)</label>
-                            <input type="text" id="itemCode" placeholder="SCANNED_OUTPUT" class="w-full bg-slate-900 border border-white/5 p-3 rounded-xl text-[11px] font-mono text-indigo-300 outline-none">
+                        <div class="space-y-1.5">
+                            <label class="text-[9px] font-black text-slate-500 uppercase tracking-tight ml-1">Unique Identifier (UID)</label>
+                            <input type="text" id="itemCode" placeholder="SCANNED_OUTPUT" class="w-full bg-slate-900/50 border border-white/5 p-3.5 rounded-xl text-[11px] font-mono text-indigo-400 outline-none focus:border-indigo-500 transition-all uppercase">
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="number" id="itemQty" placeholder="STOCK QTY" class="bg-slate-900 border border-white/5 p-3 rounded-xl text-[11px] outline-none">
-                            <input type="number" id="itemPrice" placeholder="UNIT PRICE" class="bg-slate-900 border border-white/5 p-3 rounded-xl text-[11px] outline-none">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-tight ml-1">Stock Level</label>
+                                <input type="number" id="itemQty" placeholder="QTY" class="w-full bg-slate-900/50 border border-white/5 p-3.5 rounded-xl text-[11px] outline-none focus:border-indigo-500 transition-all text-white">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black text-slate-500 uppercase tracking-tight ml-1">Market Price</label>
+                                <input type="number" id="itemPrice" placeholder="USD" class="w-full bg-slate-900/50 border border-white/5 p-3.5 rounded-xl text-[11px] outline-none focus:border-indigo-500 transition-all text-white">
+                            </div>
                         </div>
                     </div>
-                    <button onclick="pushToCloud()" class="compact-btn w-full bg-indigo-600 shadow-lg text-white">Sync to Cloud</button>
+                    <button onclick="pushToCloud()" class="compact-btn w-full bg-indigo-600 shadow-xl shadow-indigo-900/20 text-white mt-2">Push to Quantum Cloud</button>
                 </div>
             </div>
 
-            <div class="lg:col-span-8 space-y-6">
-                <div class="glass-panel p-6 rounded-3xl h-64 border border-white/5">
+            <div class="lg:col-span-8 space-y-8">
+                <div class="glass-panel p-8 rounded-[2rem] h-64 border border-white/5 shadow-inner">
                     <canvas id="stockChart"></canvas>
                 </div>
-                <div id="registry-feed" class="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center px-4">
+                        <h4 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Registry Stream</h4>
+                        <span class="text-[9px] text-indigo-500 font-mono">REAL_TIME_SYNC: ACTIVE</span>
                     </div>
+                    <div id="registry-feed" class="space-y-3 scroll-container pr-2">
+                        </div>
+                </div>
             </div>
         </div>
     </main>
 
-    <div class="md:hidden fixed bottom-0 w-full glass-panel border-t border-white/5 p-4 flex justify-around z-[100]">
-        <a href="index.html" class="p-3 bg-indigo-600 rounded-xl text-white">📊</a>
-        <a href="pos.html" class="p-3 text-slate-400">💳</a>
+    <div class="md:hidden fixed bottom-0 w-full glass-panel border-t border-white/10 p-5 flex justify-around items-center z-[1000] rounded-t-[2.5rem]">
+        <a href="index.html" class="flex flex-col items-center gap-1">
+            <div class="p-3 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-600/30">📊</div>
+            <span class="text-[8px] font-black uppercase text-indigo-400">Inventory</span>
+        </a>
+        <a href="pos.html" class="flex flex-col items-center gap-1">
+            <div class="p-3 bg-slate-800 rounded-2xl text-slate-400">💳</div>
+            <span class="text-[8px] font-black uppercase text-slate-600">POS</span>
+        </a>
     </div>
 
     <script>
         /**
-         * WAYNE CORE OPERATIONAL LOGIC
-         * Handles Security, Optical Capture, and Firebase Sync.
+         * WAYNE CORE v11.6.0 OPERATIONAL LOGIC
+         * samwelwayne266 Proprietary Code
          */
+        
+        // Security Access Controller
         function unlock() {
             const pass = document.getElementById('gate-pass').value;
             if(pass.toUpperCase() === "WAYNE") {
-                document.getElementById('auth-gate').style.display = 'none';
+                document.getElementById('auth-gate').classList.add('hidden');
                 document.getElementById('main-view').style.opacity = '1';
                 startScanner();
+            } else {
+                alert("ACCESS DENIED: INVALID CORE KEY");
             }
         }
 
+        // Database Configuration
         const firebaseConfig = { 
             apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
             databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", 
@@ -191,53 +243,67 @@
         const database = firebase.database();
 
         let chart;
+        
+        // QR/Barcode Engine Initialization
         function startScanner() {
             const scanner = new Html5Qrcode("inventory-reader");
-            scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } }, (text) => {
+            const config = { fps: 30, qrbox: { width: 260, height: 160 } };
+            
+            scanner.start({ facingMode: "environment" }, config, (text) => {
                 document.getElementById('itemCode').value = text;
-                if(navigator.vibrate) navigator.vibrate(50);
-            });
+                // Audio/Haptic Feedback
+                if(navigator.vibrate) navigator.vibrate([50, 20, 50]);
+            }).catch(err => console.error("Scanner Error:", err));
         }
 
+        // Data Transmission Logic
         function pushToCloud() {
-            const name = document.getElementById('itemName').value || "UNNAMED_ASSET";
-            const code = document.getElementById('itemCode').value || "MANUAL_ENTRY";
+            const name = document.getElementById('itemName').value || "UNIDENTIFIED_ASSET";
+            const code = document.getElementById('itemCode').value || "MANUAL_ENTRY_00";
             const qty = parseInt(document.getElementById('itemQty').value) || 0;
             const price = parseFloat(document.getElementById('itemPrice').value) || 0;
 
+            if(qty < 0 || price < 0) return alert("Negative values prohibited.");
+
             database.ref('inventory').push({
                 name, code, qty, price,
-                timestamp: Date.now()
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                operator: "samwelwayne266"
             }).then(() => {
+                // Clear UI State
                 ['itemName','itemCode','itemQty','itemPrice'].forEach(id => document.getElementById(id).value = '');
-            });
+            }).catch(err => alert("Sync Failure: " + err.message));
         }
 
+        // Real-Time Data Observer
         database.ref('inventory').on('value', snap => {
             const data = snap.val() || {};
             const feed = document.getElementById('registry-feed');
             const labels = [], values = [];
             let count = 0;
+            
             feed.innerHTML = '';
             
+            // Render Stream and Prep Chart Data
             for(let key in data) {
                 const item = data[key];
-                labels.push(item.name);
+                labels.push(item.name.substring(0, 10)); // Short labels for mobile
                 values.push(item.qty);
                 count++;
 
                 feed.innerHTML += `
-                    <div class="glass-panel p-4 rounded-2xl flex justify-between items-center group hover:bg-white/5 transition-all">
-                        <div class="flex flex-col">
-                            <p class="text-[8px] font-mono text-indigo-400 mb-1 uppercase tracking-tighter">${item.code}</p>
-                            <h5 class="text-[11px] font-black uppercase text-white tracking-tight">${item.name}</h5>
+                    <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center group hover:border-indigo-500/50 transition-all border border-white/5">
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[7px] font-mono text-indigo-400 uppercase tracking-tighter bg-indigo-500/10 w-fit px-1.5 rounded">${item.code}</span>
+                            <h5 class="text-[12px] font-black uppercase text-white tracking-tight">${item.name}</h5>
+                            <p class="text-[8px] text-slate-600 font-bold">OPERATOR: samwelwayne266</p>
                         </div>
                         <div class="flex items-center gap-6">
                             <div class="text-right">
-                                <p class="text-xs font-black text-white">${item.qty} UNITS</p>
-                                <p class="text-[9px] font-bold text-slate-500">$${item.price}</p>
+                                <p class="text-[13px] font-black text-indigo-100">${item.qty} <span class="text-[9px] text-slate-500">STK</span></p>
+                                <p class="text-[10px] font-bold text-slate-500 tracking-tighter">$${item.price.toFixed(2)}</p>
                             </div>
-                            <button onclick="database.ref('inventory/${key}').remove()" class="text-red-500 opacity-0 group-hover:opacity-100 transition-all font-black text-xl hover:scale-125">×</button>
+                            <button onclick="database.ref('inventory/${key}').remove()" class="text-red-500/40 hover:text-red-500 transition-colors font-black text-2xl px-2">×</button>
                         </div>
                     </div>`;
             }
@@ -245,9 +311,15 @@
             updateChart(labels, values);
         });
 
+        // Visualization Engine
         function updateChart(l, v) {
             const ctx = document.getElementById('stockChart').getContext('2d');
             if(chart) chart.destroy();
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -255,24 +327,45 @@
                     datasets: [{
                         data: v,
                         borderColor: '#6366f1',
-                        borderWidth: 2,
-                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#020617',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        tension: 0.45,
                         fill: true,
-                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
-                        pointRadius: 0
+                        backgroundColor: gradient
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: { 
+                            backgroundColor: '#0f172a',
+                            titleFont: { family: 'Inter', weight: '900' },
+                            bodyFont: { family: 'Inter' }
+                        }
+                    },
                     scales: {
                         y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 8 } } }
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: '#475569', font: { size: 7, weight: 'bold' }, autoSkip: true } 
+                        }
                     }
                 }
             });
         }
+
+        // Maintenance Protocol: Prevent accidental page refreshes on forms
+        window.addEventListener('beforeunload', (e) => {
+            if (document.getElementById('itemCode').value !== "") {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
     </script>
 </body>
 </html>
