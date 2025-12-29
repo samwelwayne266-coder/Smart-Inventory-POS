@@ -14,9 +14,9 @@
         body { background-color: var(--bg); color: #f8fafc; font-family: 'Inter', sans-serif; overflow: hidden; }
         .glass { background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.08); }
         
-        /* UNIFIED SCANNER SYSTEM */
-        #pos-reader { border: none !important; width: 100% !important; border-radius: 2rem; overflow: hidden; background: #000; }
-        .scan-box { position: relative; border-radius: 2.5rem; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden; }
+        /* --- UNIFIED SCANNING SYSTEM --- */
+        #pos-reader { border: none !important; width: 100% !important; border-radius: 1.5rem; overflow: hidden; background: #000; }
+        .scan-box { position: relative; border-radius: 2rem; border: 1px solid rgba(99, 102, 241, 0.3); overflow: hidden; }
         .brackets { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 260px; height: 160px; z-index: 50; pointer-events: none; }
         .brk { position: absolute; width: 30px; height: 30px; border: 3px solid #fff; filter: drop-shadow(0 0 8px var(--accent)); }
         .tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 10px 0 0 0; }
@@ -24,35 +24,43 @@
         .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 10px; }
         .br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 10px 0; }
         .laser { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: #ef4444; box-shadow: 0 0 15px #ef4444; animation: sweep 2.5s infinite linear; z-index: 51; }
-        @keyframes sweep { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+        @keyframes sweep { 0%, 100% { top: 10% } 50% { top: 90% } }
 
-        /* COMPACT NAVIGATION */
+        /* --- COMPACT BUTTON ARCHITECTURE --- */
         .nav-btn { transition: 0.3s; border: 1px solid transparent; }
         .nav-active { background: #6366f1 !important; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
-        .small-btn { padding: 0.75rem 1.5rem; border-radius: 1rem; font-size: 0.75rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; }
+        .compact-btn { padding: 0.6rem 1.2rem; border-radius: 0.75rem; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.2s; }
+        .compact-btn:active { transform: scale(0.95); }
+
         ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
-    <nav class="hidden md:flex flex-col w-64 glass p-6 border-r border-white/5 gap-4">
+    <nav class="hidden md:flex flex-col w-60 glass p-6 border-r border-white/5 gap-3 z-[100]">
         <div class="mb-8">
-            <h2 class="text-xl font-black italic uppercase">Wayne <span class="text-indigo-500">POS</span></h2>
-            <p class="text-[9px] text-slate-500 font-mono">OP: samwelwayne266</p>
+            <h2 class="text-lg font-black italic uppercase">Wayne <span class="text-indigo-500">POS</span></h2>
+            <p class="text-[8px] text-slate-500 font-mono mt-1 opacity-60">ID: samwelwayne266</p>
         </div>
-        <a href="index.html" class="nav-btn flex items-center gap-3 p-3 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/5"><span>📊</span> Dashboard</a>
-        <a href="pos.html" class="nav-btn nav-active flex items-center gap-3 p-3 rounded-xl text-xs font-bold"><span>💳</span> Terminal</a>
+        <a href="index.html" class="nav-btn flex items-center gap-3 p-2.5 rounded-lg text-[11px] font-bold text-slate-400 hover:bg-white/5"><span>📊</span> Dashboard</a>
+        <a href="pos.html" class="nav-btn nav-active flex items-center gap-3 p-2.5 rounded-lg text-[11px] font-bold"><span>💳</span> Terminal</a>
+        <div class="mt-auto pt-4 border-t border-white/5">
+            <p class="text-[8px] text-slate-600 uppercase font-bold tracking-widest">v10.0.1 Stable</p>
+        </div>
     </nav>
 
-    <main class="flex-1 p-6 lg:p-12 overflow-y-auto">
-        <header class="mb-8">
-            <h1 class="text-4xl font-black uppercase italic tracking-tighter">Sales <span class="text-indigo-500">Engine</span></h1>
+    <main class="flex-1 p-6 lg:p-10 overflow-y-auto">
+        <header class="mb-10">
+            <p class="text-indigo-400 font-mono text-[9px] tracking-[0.5em] mb-1 uppercase">Transaction_Interface_Alpha</p>
+            <h1 class="text-5xl font-black uppercase italic tracking-tighter">Sales <span class="text-indigo-500">Engine</span></h1>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-5 space-y-6">
-                <div class="glass p-4 scan-box">
-                    <div id="pos-reader" class="h-48"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div class="lg:col-span-5 space-y-8">
+                <div class="glass p-4 scan-box shadow-2xl">
+                    <p class="text-[8px] font-black uppercase text-indigo-400 mb-2 px-2">Transaction Capture</p>
+                    <div id="pos-reader" class="h-44"></div>
                     <div class="brackets">
                         <div class="brk tl"></div><div class="brk tr"></div>
                         <div class="brk bl"></div><div class="brk br"></div>
@@ -60,28 +68,34 @@
                     </div>
                 </div>
 
-                <div class="glass p-6 rounded-3xl min-h-[300px]">
-                    <h4 class="text-[9px] font-black uppercase text-slate-500 mb-4">Transaction Basket</h4>
-                    <div id="cart" class="space-y-2"></div>
+                <div class="glass p-6 rounded-3xl min-h-[350px]">
+                    <h4 class="text-[9px] font-black uppercase text-slate-500 mb-6 tracking-widest">Current Session Basket</h4>
+                    <div id="cart" class="space-y-2">
+                        </div>
                 </div>
             </div>
 
             <div class="lg:col-span-7">
-                <div class="glass p-10 rounded-[2.5rem] sticky top-0 text-center space-y-8">
+                <div class="glass p-12 rounded-[3rem] sticky top-0 text-center space-y-10 shadow-2xl">
                     <div>
-                        <p class="text-[10px] font-black text-slate-500 uppercase">Grand Total</p>
-                        <h2 id="total" class="text-7xl font-black text-indigo-400 font-mono tracking-tighter">$0.00</h2>
+                        <p class="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2">Aggregate Total Due</p>
+                        <h2 id="total" class="text-8xl font-black text-indigo-400 font-mono tracking-tighter">$0.00</h2>
                     </div>
-                    <button onclick="checkout()" class="small-btn w-full bg-indigo-600 text-white shadow-xl py-6">Complete Transaction</button>
-                    <p class="text-[8px] font-mono text-slate-600 uppercase">Secure_Gateway: Wayne_POS_v9</p>
+                    <div class="pt-6 border-t border-white/5">
+                        <button onclick="executeSale()" class="compact-btn w-full bg-indigo-600 shadow-xl py-6 text-sm">Finalize Transaction</button>
+                    </div>
+                    <div class="flex justify-between items-center opacity-40">
+                        <p class="text-[8px] font-mono text-slate-600 uppercase">SECURE_LINK: WAYNE_CORE</p>
+                        <p class="text-[8px] font-mono text-slate-600 uppercase">USER: samwelwayne266</p>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div class="md:hidden fixed bottom-0 w-full glass p-4 flex justify-around z-[100]">
-        <a href="index.html" class="p-3 text-slate-400">📊</a>
-        <a href="pos.html" class="p-3 bg-indigo-600 rounded-xl">💳</a>
+    <div class="md:hidden fixed bottom-0 w-full glass border-t border-white/5 p-4 flex justify-around z-[100]">
+        <a href="index.html" class="p-2.5 text-slate-400">📊</a>
+        <a href="pos.html" class="p-2.5 bg-indigo-600 rounded-lg text-white">💳</a>
     </div>
 
     <script>
@@ -89,40 +103,47 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let stock = {}, cart = [];
-        db.ref('inventory').on('value', snap => stock = snap.val() || {});
+        let masterStock = {}, basket = [];
+        db.ref('inventory').on('value', snap => masterStock = snap.val() || {});
 
-        const scn = new Html5Qrcode("pos-reader");
-        scn.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } }, (t) => {
-            for(let k in stock) if(stock[k].code === t) addToCart(k);
-            if(navigator.vibrate) navigator.vibrate(50);
+        const posScn = new Html5Qrcode("pos-reader");
+        posScn.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } }, (code) => {
+            for(let key in masterStock) {
+                if(masterStock[key].code === code) {
+                    processBasket(key);
+                    if(navigator.vibrate) navigator.vibrate(50);
+                    return;
+                }
+            }
         });
 
-        function addToCart(k) {
-            const item = stock[k];
-            const inCart = cart.find(c => c.key === k);
-            if(inCart) inCart.qty++; else cart.push({...item, key: k, qty: 1});
-            render();
+        function processBasket(key) {
+            const item = masterStock[key];
+            const active = basket.find(b => b.key === key);
+            if(active) active.qty++; else basket.push({...item, key: key, qty: 1});
+            renderCart();
         }
 
-        function render() {
-            let t = 0;
-            const c = document.getElementById('cart');
-            c.innerHTML = cart.map(i => {
-                t += (i.qty * i.price);
-                return `<div class="flex justify-between p-4 bg-white/5 rounded-2xl border border-white/5 text-xs font-bold">
-                    <div><p class="uppercase">${i.name}</p><p class="text-[9px] text-slate-500">${i.qty} units</p></div>
-                    <span class="text-indigo-400">$${(i.qty*i.price).toFixed(2)}</span>
+        function renderCart() {
+            let grandTotal = 0;
+            const cartDiv = document.getElementById('cart');
+            cartDiv.innerHTML = basket.map(i => {
+                grandTotal += (i.qty * i.price);
+                return `<div class="flex justify-between p-4 bg-white/5 rounded-2xl border border-white/5 text-[11px] font-bold">
+                    <div><p class="uppercase text-white">${i.name}</p><p class="text-[9px] text-slate-500 font-mono">${i.qty} UNITS @ $${i.price}</p></div>
+                    <span class="text-indigo-400 font-black">$${(i.qty * i.price).toFixed(2)}</span>
                 </div>`;
             }).join('');
-            document.getElementById('total').innerText = `$${t.toFixed(2)}`;
+            document.getElementById('total').innerText = `$${grandTotal.toFixed(2)}`;
         }
 
-        function checkout() {
-            if(!cart.length) return;
-            cart.forEach(c => db.ref('inventory/'+c.key).update({ qty: stock[c.key].qty - c.qty }));
-            alert("TRANSACTION SUCCESSFUL");
-            cart = []; render();
+        function executeSale() {
+            if(!basket.length) return;
+            basket.forEach(b => {
+                db.ref('inventory/' + b.key).update({ qty: masterStock[b.key].qty - b.qty });
+            });
+            alert("SUCCESS: TRANSACTION_COMPLETE");
+            basket = []; renderCart();
         }
     </script>
 </body>
