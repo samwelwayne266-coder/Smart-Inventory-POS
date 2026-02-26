@@ -146,7 +146,7 @@
                     <div class="flex justify-between items-center mb-3 px-2">
                         <p class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">BARCODE READER</p>
                     </div>
-                    <div id="inventory-reader" class="h-44 bg-slate-450"></div>
+                    <div id="inventory-reader" class="h-20 bg-slate-450"></div>
                 </div>
 
                 <div class="glass-panel p-6 rounded-[2rem] space-y-5">
@@ -205,17 +205,27 @@
          */
         
         // Security Access Controller
-        function unlock() {
-            const pass = document.getElementById('gate-pass').value;
-            if(pass.toUpperCase() === "WAYNE") {
+// Updated Security Access Controller
+function unlock() {
+    const pass = document.getElementById('gate-pass').value;
+    
+    if(pass.toUpperCase() === "WAYNE") {
+        // Authenticate with Firebase first
+        firebase.auth().signInAnonymously()
+            .then(() => {
+                // Once authenticated, show the dashboard
                 document.getElementById('auth-gate').classList.add('hidden');
                 document.getElementById('main-view').style.opacity = '1';
                 startScanner();
-            } else {
-                alert("ACCESS DENIED: INVALID CORE KEY");
-            }
-        }
-
+                console.log("Secure Connection Established.");
+            })
+            .catch((error) => {
+                alert("CORE AUTH FAILURE: " + error.message);
+            });
+    } else {
+        alert("ACCESS DENIED: INVALID CORE KEY");
+    }
+}
         // Database Configuration
         const firebaseConfig = { 
             apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
@@ -352,6 +362,7 @@
     </script>
 </body>
 </html>
+
 
 
 
