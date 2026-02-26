@@ -97,22 +97,16 @@
 
     <div id="auth-gate" class="fixed inset-0 z-[9999] bg-[#020617] flex flex-col items-center justify-center p-6 text-center">
         <div class="max-w-xs w-full space-y-8">
+            <div class="space-y-2">
+                <h1 class="text-4xl font-black italic tracking-tighter uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h1>
+                <p class="text-[9px] font-mono text-slate-500 uppercase tracking-[0.4em]">WayneOS // PROTECTED_HUB</p>
+            </div>
             <div class="space-y-4">
-    <input type="email" id="email" placeholder="EMAIL"
-        class="auth-input w-full p-4 outline-none focus:border-indigo-500 transition-all">
-
-    <input type="password" id="password" placeholder="PASSWORD"
-        class="auth-input w-full p-4 outline-none focus:border-indigo-500 transition-all">
-
-    <button onclick="login()" class="compact-btn w-full bg-indigo-600">
-        Login
-    </button>
-
-    <button onclick="register()" class="compact-btn w-full bg-slate-700">
-        Register
-    </button>
-        </div>
+                <input type="password" id="gate-pass" class="auth-input w-full p-4 outline-none focus:border-indigo-500 transition-all" placeholder="•••••">
+                <button onclick="unlock()" class="compact-btn w-full bg-indigo-600">Access Inventory</button>
+            </div>
             <p class="text-[8px] text-slate-700 uppercase font-bold tracking-widest mt-10">Restricted to Wayne Core Personnel</p>
+        </div>
     </div>
 
     <nav class="hidden md:flex flex-col w-64 glass-panel border-r border-white/5 p-6 gap-3 z-[100] fixed h-full">
@@ -127,16 +121,12 @@
         </div>
 
         <div class="mt-auto p-4 bg-white/5 rounded-2xl border border-white/5">
-            <button onclick="logout()" 
-    class="compact-btn mt-6 bg-red-600 w-full">
-    Logout
-            </button>
             <div class="flex items-center gap-2 mb-2">
                 <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                 <span class="text-[8px] font-mono text-slate-400">CLOUD_LINK_STABLE</span>
             </div>
             <p class="text-[8px] font-mono text-slate-600 uppercase">SUCCESSFULLY CONNECTED</p>
-      </div>
+        </div>
     </nav>
 
     <main id="main-view" class="flex-1 md:ml-64 p-6 lg:p-12 opacity-0 transition-opacity duration-1000">
@@ -226,42 +216,6 @@
                 alert("ACCESS DENIED: INVALID CORE KEY");
             }
         }
-
-        // 🔐 Login
-function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-            console.log("Logged in");
-        })
-        .catch(error => {
-            alert("Login Error: " + error.message);
-        });
-}
-
-// 🆕 Register
-function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-            alert("User Created Successfully");
-        })
-        .catch(error => {
-            alert("Register Error: " + error.message);
-        });
-}
-
-// 🚪 Logout
-function logout() {
-    auth.signOut().then(() => {
-        console.log("Logged out");
-    });
-}
-        
         function startScanner() {
     const scanner = new Html5Qrcode("inventory-reader");
     const config = { fps: 30, qrbox: { width: 260, height: 160 } };
@@ -318,6 +272,8 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
 
+// 🔐 Anonymous Sign In
+auth.signInAnonymously()
   .then(() => {
       console.log("Anonymous user signed in");
   })
@@ -327,56 +283,43 @@ const auth = firebase.auth();
 
 // Wait for authentication before accessing database
 auth.onAuthStateChanged(user => {
+    if (!user) return;
 
-    if (user) {
-        // User is logged in
-        document.getElementById('auth-gate').classList.add('hidden');
-        document.getElementById('main-view').style.opacity = '1';
+    console.log("Authenticated UID:", user.uid);
 
-        console.log("Authenticated UID:", user.uid);
+    database.ref('inventory').on('value', snap => {
+        const data = snap.val() || {};
+        const feed = document.getElementById('registry-feed');
+        const labels = [], values = [];
+        let count = 0;
 
-        startScanner();
+        feed.innerHTML = '';
 
-        database.ref('inventory').on('value', snap => {
-            const data = snap.val() || {};
-            const feed = document.getElementById('registry-feed');
-            const labels = [], values = [];
-            let count = 0;
+        for (let key in data) {
+            const item = data[key];
+            labels.push(item.name.substring(0, 10));
+            values.push(item.qty);
+            count++;
 
-            feed.innerHTML = '';
+            feed.innerHTML += `
+                <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center border border-white/5">
+                    <div>
+                        <span class="text-[7px] font-mono text-indigo-400">${item.code}</span>
+                        <h5 class="text-[12px] font-black text-white">${item.name}</h5>
+                        <p class="text-[8px] text-slate-600">OPERATOR: ${item.operator}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[13px] font-black text-indigo-100">${item.qty}</p>
+                        <p class="text-[10px] text-slate-500">$${item.price.toFixed(2)}</p>
+                    </div>
+                </div>`;
+        }
 
-            for (let key in data) {
-                const item = data[key];
-                labels.push(item.name.substring(0, 10));
-                values.push(item.qty);
-                count++;
+        document.getElementById('total-count').innerText =
+            count.toString().padStart(3, '0');
 
-                feed.innerHTML += `
-                    <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center border border-white/5">
-                        <div>
-                            <span class="text-[7px] font-mono text-indigo-400">${item.code}</span>
-                            <h5 class="text-[12px] font-black text-white">${item.name}</h5>
-                            <p class="text-[8px] text-slate-600">OPERATOR: ${item.operator}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[13px] font-black text-indigo-100">${item.qty}</p>
-                            <p class="text-[10px] text-slate-500">$${item.price.toFixed(2)}</p>
-                        </div>
-                    </div>`;
-            }
-
-            document.getElementById('total-count').innerText =
-                count.toString().padStart(3, '0');
-
-            updateChart(labels, values);
-        });
-
-    } else {
-        // Not logged in
-        document.getElementById('auth-gate').classList.remove('hidden');
-        document.getElementById('main-view').style.opacity = '0';
-    }
-});
+        updateChart(labels, values);
+    });
 });
 
 // Updated push function
@@ -420,7 +363,5 @@ function pushToCloud() {
     </script>
 </body>
 </html>
-
-
 
 
