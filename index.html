@@ -202,8 +202,7 @@
 <script>
     /**
      * WAYNE CORE v11.6.0 OPERATIONAL LOGIC
-     * samwelwayne266 Proprietary Code
-     * Dynamic Gate Pass Integration
+     * Case-Insensitive Firebase Gate Pass
      */
 
     // 1. Database Configuration
@@ -217,11 +216,13 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // 🔐 Security Access Controller (Updated for Firebase)
+    // 🔐 CASE-INSENSITIVE Security Access Controller
     async function unlock() {
         const passInput = document.getElementById('gate-pass');
         const unlockBtn = document.querySelector('#auth-gate button');
-        const enteredPass = passInput.value.trim();
+        
+        // Normalize User Input: Trim spaces and force to UPPERCASE
+        const enteredPass = passInput.value.trim().toUpperCase();
 
         if (!enteredPass) return;
 
@@ -230,15 +231,22 @@
         unlockBtn.disabled = true;
 
         try {
-            // Retrieve the stored pass from Firebase node 'security/gate_pass'
+            // Retrieve the stored pass from Firebase
             const snapshot = await database.ref('security/gate_pass').once('value');
-            const correctPass = snapshot.val();
+            let dbPass = snapshot.val();
+
+            // Normalize Database Value: Force to UPPERCASE for comparison
+            const correctPass = dbPass ? dbPass.toString().toUpperCase() : null;
 
             if (enteredPass === correctPass) {
+                // Access Granted
                 document.getElementById('auth-gate').classList.add('hidden');
-                document.getElementById('main-view').style.opacity = '1';
+                const mainView = document.getElementById('main-view');
+                mainView.classList.remove('opacity-0');
+                mainView.style.opacity = '1';
                 startScanner();
             } else {
+                // Access Denied
                 alert("ACCESS DENIED: INVALID CORE KEY");
                 passInput.value = "";
                 unlockBtn.innerText = "Access Inventory";
@@ -246,7 +254,7 @@
             }
         } catch (error) {
             console.error("Security Error:", error);
-            alert("SYNC ERROR: Could not verify credentials.");
+            alert("SYNC ERROR: Authentication service unavailable.");
             unlockBtn.disabled = false;
             unlockBtn.innerText = "Access Inventory";
         }
@@ -290,20 +298,16 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: {
-                    y: { display: false },
-                    x: { display: false }
-                }
+                scales: { y: { display: false }, x: { display: false } }
             }
         });
     }
 
-    // 🔐 Anonymous Sign In
+    // Initialize Session
     auth.signInAnonymously()
-      .then(() => console.log("WayneCore Session Initialized"))
-      .catch((error) => console.error("Auth error:", error));
+      .then(() => console.log("WayneCore Authenticated"))
+      .catch((err) => console.error("Auth Failed", err));
 
-    // Monitor Authentication and Data
     auth.onAuthStateChanged(user => {
         if (!user) return;
 
@@ -314,7 +318,6 @@
             let count = 0;
 
             feed.innerHTML = '';
-
             for (let key in data) {
                 const item = data[key];
                 labels.push(item.name.substring(0, 10));
@@ -334,7 +337,6 @@
                         </div>
                     </div>`;
             }
-
             document.getElementById('total-count').innerText = count.toString().padStart(3, '0');
             updateChart(labels, values);
         });
@@ -346,31 +348,20 @@
         const qty = parseInt(document.getElementById('itemQty').value) || 0;
         const price = parseFloat(document.getElementById('itemPrice').value) || 0;
 
-        if (qty < 0 || price < 0) {
-            alert("Negative values prohibited.");
-            return;
-        }
+        if (qty < 0 || price < 0) { alert("Negative values prohibited."); return; }
 
         const user = auth.currentUser;
-        if (!user) {
-            alert("Authentication not ready.");
-            return;
-        }
+        if (!user) { alert("Auth not ready."); return; }
 
         database.ref('inventory').push({
-            name,
-            code,
-            qty,
-            price,
+            name, code, qty, price,
             timestamp: firebase.database.ServerValue.TIMESTAMP,
             operator: user.uid
         }).then(() => {
-            ['itemName','itemCode','itemQty','itemPrice']
-                .forEach(id => document.getElementById(id).value = '');
+            ['itemName','itemCode','itemQty','itemPrice'].forEach(id => document.getElementById(id).value = '');
         }).catch(err => alert("Sync Failure: " + err.message));
     }
 
-    // Maintenance Protocol
     window.addEventListener('beforeunload', (e) => {
         if (document.getElementById('itemCode').value !== "") {
             e.preventDefault();
@@ -380,5 +371,6 @@
 </script>
 </body>
 </html>
+
 
 
