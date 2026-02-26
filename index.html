@@ -216,6 +216,50 @@
                 alert("ACCESS DENIED: INVALID CORE KEY");
             }
         }
+        function startScanner() {
+    const scanner = new Html5Qrcode("inventory-reader");
+    const config = { fps: 30, qrbox: { width: 260, height: 160 } };
+
+    scanner.start({ facingMode: "environment" }, config,
+        (text) => {
+            document.getElementById('itemCode').value = text;
+            if (navigator.vibrate) navigator.vibrate([50, 20, 50]);
+        }
+    ).catch(err => console.error("Scanner Error:", err));
+}
+        function updateChart(l, v) {
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    if (window.chart) window.chart.destroy();
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+    window.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: l,
+            datasets: [{
+                data: v,
+                borderColor: '#6366f1',
+                borderWidth: 3,
+                pointBackgroundColor: '#6366f1',
+                tension: 0.45,
+                fill: true,
+                backgroundColor: gradient
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { display: false },
+                x: { display: false }
+            }
+        }
+    });
+}
 
         // Database Configuration
         const firebaseConfig = { 
@@ -319,5 +363,6 @@ function pushToCloud() {
     </script>
 </body>
 </html>
+
 
 
