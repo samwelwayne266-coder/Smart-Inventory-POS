@@ -112,7 +112,6 @@
     <nav class="hidden md:flex flex-col w-64 glass-panel border-r border-white/5 p-6 gap-3 z-[100] fixed h-full">
         <div class="mb-10">
             <h2 class="text-xl font-black italic uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h2>
-            <p id="user-uid-display" class="text-[10px] text-slate-500 font-mono mt-1 opacity-60 uppercase">UID: LOADING...</p>
         </div>
         
         <div class="space-y-2">
@@ -125,12 +124,7 @@
                 <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                 <span class="text-[8px] font-mono text-slate-400">CLOUD_LINK_STABLE</span>
             </div>
-            <p id="user-uid-display" 
-       onclick="copyUID()" 
-       class="text-[9px] font-mono text-slate-500 hover:text-indigo-400 cursor-pointer transition-colors uppercase tracking-tight"
-       title="Click to copy UID">
-       UID: LOADING...
-    </p>
+            <p id="user-uid-display" onclick="copyUID()" class="text-[10px] font-mono text-slate-500 hover:text-indigo-400 cursor-pointer transition-colors uppercase tracking-tight"title="Click to copy UID">UID: LOADING...</p>
         </div>
 
         <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[10000] bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-full shadow-2xl transition-all duration-500 opacity-0 pointer-events-none">
@@ -354,6 +348,7 @@ function pushToCloud() {
 </script>
 </body>
 </html>
+
 
 
 
