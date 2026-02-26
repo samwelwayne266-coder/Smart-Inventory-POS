@@ -149,10 +149,6 @@
                 <div class="glass-panel p-4 scanner-container shadow-2xl border border-indigo-500/20">
                     <div class="flex justify-between items-center mb-3 px-2">
                         <p class="text-[8px] font-black uppercase text-indigo-400 tracking-widest">BARCODE READER</p>
-                        <div class="flex gap-1">
-                            <div class="w-1 h-1 bg-red-500 rounded-full animate-ping"></div>
-                            <span class="text-[7px] text-slate-500 font-bold">LIVE_FEED</span>
-                        </div>
                     </div>
                     <div id="inventory-reader" class="h-44 bg-slate-950"></div>
                 </div>
@@ -200,14 +196,8 @@
     </main>
 
     <div class="md:hidden fixed bottom-0 w-full glass-panel border-t border-white/10 p-5 flex justify-around items-center z-[1000] rounded-t-[2.5rem]">
-        <a href="index.html" class="flex flex-col items-center gap-1">
-            <div class="p-3 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-600/30">📊</div>
-            <span class="text-[14px] font-black uppercase text-indigo-400">Inventory</span>
-        </a>
-        <a href="pos.html" class="flex flex-col items-center gap-1">
-            <div class="p-3 bg-slate-800 rounded-2xl text-slate-400">💳</div>
-            <span class="text-[14px] font-black uppercase text-slate-600">POS</span>
-        </a>
+            <a href="index.html" class="flex items-center gap-3 p-3 rounded-xl text-[14px] font-black text-slate-400 hover:bg-white/5 uppercase">📊 Inventory</a>
+            <a href="pos.html" class="bg-indigo-600 flex items-center gap-3 p-3 rounded-xl text-[14px] font-black text-white uppercase shadow-lg">💳 Terminal</a>
     </div>
 
     <script>
@@ -364,6 +354,7 @@
     </script>
 </body>
 </html>
+
 
 
 
