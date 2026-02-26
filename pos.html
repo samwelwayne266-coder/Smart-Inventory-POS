@@ -354,7 +354,6 @@
         };
 
         db.ref().update(updates).then(() => {
-            alert("TRANSACTION VERIFIED");
             basket = [];
             renderCart();
         }).catch(err => alert("SYNC ERROR: " + err.message));
@@ -364,25 +363,4 @@
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
