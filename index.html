@@ -112,7 +112,7 @@
     <nav class="hidden md:flex flex-col w-64 glass-panel border-r border-white/5 p-6 gap-3 z-[100] fixed h-full">
         <div class="mb-10">
             <h2 class="text-xl font-black italic uppercase text-white">Wayne <span class="text-indigo-500">Core</span></h2>
-            <p class="text-[10px] text-slate-500 font-mono mt-1 opacity-60 uppercase">UID:("user.uid")</p>
+            <p id="user-uid-display" class="text-[10px] text-slate-500 font-mono mt-1 opacity-60 uppercase">UID: LOADING...</p>
         </div>
         
         <div class="space-y-2">
@@ -311,6 +311,11 @@
     auth.onAuthStateChanged(user => {
         if (!user) return;
 
+        document.getElementById('user-uid-display').innerText = `UID: ${user.uid}`;
+    // ---------------------------
+
+        console.log("Authenticated UID:", user.uid);
+
         database.ref('inventory').on('value', snap => {
             const data = snap.val() || {};
             const feed = document.getElementById('registry-feed');
@@ -371,6 +376,7 @@
 </script>
 </body>
 </html>
+
 
 
 
