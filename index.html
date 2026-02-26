@@ -199,168 +199,185 @@
         </a>
     </div>
 
-    <script>
-        /**
-         * WAYNE CORE v11.6.0 OPERATIONAL LOGIC
-         * samwelwayne266 Proprietary Code
-         */
-        
-        // Security Access Controller
-        function unlock() {
-            const pass = document.getElementById('gate-pass').value;
-            if(pass.toUpperCase() === "WAYNE") {
+<script>
+    /**
+     * WAYNE CORE v11.6.0 OPERATIONAL LOGIC
+     * samwelwayne266 Proprietary Code
+     * Dynamic Gate Pass Integration
+     */
+
+    // 1. Database Configuration
+    const firebaseConfig = { 
+        apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
+        databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", 
+        projectId: "wayne-quantum" 
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const auth = firebase.auth();
+
+    // 🔐 Security Access Controller (Updated for Firebase)
+    async function unlock() {
+        const passInput = document.getElementById('gate-pass');
+        const unlockBtn = document.querySelector('#auth-gate button');
+        const enteredPass = passInput.value.trim();
+
+        if (!enteredPass) return;
+
+        // Visual Feedback
+        unlockBtn.innerText = "VERIFYING...";
+        unlockBtn.disabled = true;
+
+        try {
+            // Retrieve the stored pass from Firebase node 'security/gate_pass'
+            const snapshot = await database.ref('security/gate_pass').once('value');
+            const correctPass = snapshot.val();
+
+            if (enteredPass === correctPass) {
                 document.getElementById('auth-gate').classList.add('hidden');
                 document.getElementById('main-view').style.opacity = '1';
                 startScanner();
             } else {
                 alert("ACCESS DENIED: INVALID CORE KEY");
+                passInput.value = "";
+                unlockBtn.innerText = "Access Inventory";
+                unlockBtn.disabled = false;
             }
+        } catch (error) {
+            console.error("Security Error:", error);
+            alert("SYNC ERROR: Could not verify credentials.");
+            unlockBtn.disabled = false;
+            unlockBtn.innerText = "Access Inventory";
         }
-        function startScanner() {
-    const scanner = new Html5Qrcode("inventory-reader");
-    const config = { fps: 30, qrbox: { width: 260, height: 160 } };
-
-    scanner.start({ facingMode: "environment" }, config,
-        (text) => {
-            document.getElementById('itemCode').value = text;
-            if (navigator.vibrate) navigator.vibrate([50, 20, 50]);
-        }
-    ).catch(err => console.error("Scanner Error:", err));
-}
-        function updateChart(l, v) {
-    const ctx = document.getElementById('stockChart').getContext('2d');
-    if (window.chart) window.chart.destroy();
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-    gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-
-    window.chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: l,
-            datasets: [{
-                data: v,
-                borderColor: '#6366f1',
-                borderWidth: 3,
-                pointBackgroundColor: '#6366f1',
-                tension: 0.45,
-                fill: true,
-                backgroundColor: gradient
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { display: false },
-                x: { display: false }
-            }
-        }
-    });
-}
-
-        // Database Configuration
-        const firebaseConfig = { 
-            apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
-            databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", 
-            projectId: "wayne-quantum" 
-        };
-firebase.initializeApp(firebaseConfig);
-
-const database = firebase.database();
-const auth = firebase.auth();
-
-// 🔐 Anonymous Sign In
-auth.signInAnonymously()
-  .then(() => {
-      console.log("Anonymous user signed in");
-  })
-  .catch((error) => {
-      console.error("Auth error:", error);
-  });
-
-// Wait for authentication before accessing database
-auth.onAuthStateChanged(user => {
-    if (!user) return;
-
-    console.log("Authenticated UID:", user.uid);
-
-    database.ref('inventory').on('value', snap => {
-        const data = snap.val() || {};
-        const feed = document.getElementById('registry-feed');
-        const labels = [], values = [];
-        let count = 0;
-
-        feed.innerHTML = '';
-
-        for (let key in data) {
-            const item = data[key];
-            labels.push(item.name.substring(0, 10));
-            values.push(item.qty);
-            count++;
-
-            feed.innerHTML += `
-                <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center border border-white/5">
-                    <div>
-                        <span class="text-[7px] font-mono text-indigo-400">${item.code}</span>
-                        <h5 class="text-[12px] font-black text-white">${item.name}</h5>
-                        <p class="text-[8px] text-slate-600">OPERATOR: ${item.operator}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[13px] font-black text-indigo-100">${item.qty}</p>
-                        <p class="text-[10px] text-slate-500">$${item.price.toFixed(2)}</p>
-                    </div>
-                </div>`;
-        }
-
-        document.getElementById('total-count').innerText =
-            count.toString().padStart(3, '0');
-
-        updateChart(labels, values);
-    });
-});
-
-// Updated push function
-function pushToCloud() {
-    const name = document.getElementById('itemName').value || "UNIDENTIFIED_ASSET";
-    const code = document.getElementById('itemCode').value || "MANUAL_ENTRY_00";
-    const qty = parseInt(document.getElementById('itemQty').value) || 0;
-    const price = parseFloat(document.getElementById('itemPrice').value) || 0;
-
-    if (qty < 0 || price < 0) {
-        alert("Negative values prohibited.");
-        return;
     }
 
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Authentication not ready.");
-        return;
+    function startScanner() {
+        const scanner = new Html5Qrcode("inventory-reader");
+        const config = { fps: 30, qrbox: { width: 260, height: 160 } };
+
+        scanner.start({ facingMode: "environment" }, config,
+            (text) => {
+                document.getElementById('itemCode').value = text;
+                if (navigator.vibrate) navigator.vibrate([50, 20, 50]);
+            }
+        ).catch(err => console.error("Scanner Error:", err));
     }
 
-    database.ref('inventory').push({
-        name,
-        code,
-        qty,
-        price,
-        timestamp: firebase.database.ServerValue.TIMESTAMP,
-        operator: user.uid
-    }).then(() => {
-        ['itemName','itemCode','itemQty','itemPrice']
-            .forEach(id => document.getElementById(id).value = '');
-    }).catch(err => alert("Sync Failure: " + err.message));
-}
+    function updateChart(l, v) {
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        if (window.chart) window.chart.destroy();
 
-        // Maintenance Protocol: Prevent accidental page refreshes on forms
-        window.addEventListener('beforeunload', (e) => {
-            if (document.getElementById('itemCode').value !== "") {
-                e.preventDefault();
-                e.returnValue = '';
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+        gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+        window.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: l,
+                datasets: [{
+                    data: v,
+                    borderColor: '#6366f1',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#6366f1',
+                    tension: 0.45,
+                    fill: true,
+                    backgroundColor: gradient
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { display: false },
+                    x: { display: false }
+                }
             }
         });
-    </script>
+    }
+
+    // 🔐 Anonymous Sign In
+    auth.signInAnonymously()
+      .then(() => console.log("WayneCore Session Initialized"))
+      .catch((error) => console.error("Auth error:", error));
+
+    // Monitor Authentication and Data
+    auth.onAuthStateChanged(user => {
+        if (!user) return;
+
+        database.ref('inventory').on('value', snap => {
+            const data = snap.val() || {};
+            const feed = document.getElementById('registry-feed');
+            const labels = [], values = [];
+            let count = 0;
+
+            feed.innerHTML = '';
+
+            for (let key in data) {
+                const item = data[key];
+                labels.push(item.name.substring(0, 10));
+                values.push(item.qty);
+                count++;
+
+                feed.innerHTML += `
+                    <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center border border-white/5">
+                        <div>
+                            <span class="text-[7px] font-mono text-indigo-400">${item.code}</span>
+                            <h5 class="text-[12px] font-black text-white">${item.name}</h5>
+                            <p class="text-[8px] text-slate-600">OPERATOR: ${item.operator}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[13px] font-black text-indigo-100">${item.qty}</p>
+                            <p class="text-[10px] text-slate-500">$${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>`;
+            }
+
+            document.getElementById('total-count').innerText = count.toString().padStart(3, '0');
+            updateChart(labels, values);
+        });
+    });
+
+    function pushToCloud() {
+        const name = document.getElementById('itemName').value || "UNIDENTIFIED_ASSET";
+        const code = document.getElementById('itemCode').value || "MANUAL_ENTRY_00";
+        const qty = parseInt(document.getElementById('itemQty').value) || 0;
+        const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+
+        if (qty < 0 || price < 0) {
+            alert("Negative values prohibited.");
+            return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Authentication not ready.");
+            return;
+        }
+
+        database.ref('inventory').push({
+            name,
+            code,
+            qty,
+            price,
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            operator: user.uid
+        }).then(() => {
+            ['itemName','itemCode','itemQty','itemPrice']
+                .forEach(id => document.getElementById(id).value = '');
+        }).catch(err => alert("Sync Failure: " + err.message));
+    }
+
+    // Maintenance Protocol
+    window.addEventListener('beforeunload', (e) => {
+        if (document.getElementById('itemCode').value !== "") {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+</script>
 </body>
 </html>
 
