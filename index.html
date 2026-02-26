@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
@@ -205,27 +206,17 @@
          */
         
         // Security Access Controller
-// Updated Security Access Controller
-function unlock() {
-    const pass = document.getElementById('gate-pass').value;
-    
-    if(pass.toUpperCase() === "WAYNE") {
-        // Authenticate with Firebase first
-        firebase.auth().signInAnonymously()
-            .then(() => {
-                // Once authenticated, show the dashboard
+        function unlock() {
+            const pass = document.getElementById('gate-pass').value;
+            if(pass.toUpperCase() === "WAYNE") {
                 document.getElementById('auth-gate').classList.add('hidden');
                 document.getElementById('main-view').style.opacity = '1';
                 startScanner();
-                console.log("Secure Connection Established.");
-            })
-            .catch((error) => {
-                alert("CORE AUTH FAILURE: " + error.message);
-            });
-    } else {
-        alert("ACCESS DENIED: INVALID CORE KEY");
-    }
-}
+            } else {
+                alert("ACCESS DENIED: INVALID CORE KEY");
+            }
+        }
+
         // Database Configuration
         const firebaseConfig = { 
             apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
@@ -234,6 +225,15 @@ function unlock() {
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
+
+        auth.signInAnonymously()
+  .then(() => {
+      console.log("Anonymous user signed in");
+  })
+  .catch((error) => {
+      console.error("Auth error:", error);
+  });
 
         let chart;
         
@@ -261,26 +261,29 @@ function unlock() {
             database.ref('inventory').push({
                 name, code, qty, price,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
-                operator: "samwelwayne266"
+                operator: firebase.auth().currentUser.uid
             }).then(() => {
                 // Clear UI State
                 ['itemName','itemCode','itemQty','itemPrice'].forEach(id => document.getElementById(id).value = '');
             }).catch(err => alert("Sync Failure: " + err.message));
         }
 
-        // Real-Time Data Observer
+// Real-Time Data Observer (Now waits for Auth)
+auth.onAuthStateChanged(user => {
+    if (user) {
+        console.log("Authenticated UID:", user.uid);
+
         database.ref('inventory').on('value', snap => {
             const data = snap.val() || {};
             const feed = document.getElementById('registry-feed');
             const labels = [], values = [];
             let count = 0;
-            
+
             feed.innerHTML = '';
-            
-            // Render Stream and Prep Chart Data
-            for(let key in data) {
+
+            for (let key in data) {
                 const item = data[key];
-                labels.push(item.name.substring(0, 10)); // Short labels for mobile
+                labels.push(item.name.substring(0, 10));
                 values.push(item.qty);
                 count++;
 
@@ -289,7 +292,7 @@ function unlock() {
                         <div class="flex flex-col gap-0.5">
                             <span class="text-[7px] font-mono text-indigo-400 uppercase tracking-tighter bg-indigo-500/10 w-fit px-1.5 rounded">${item.code}</span>
                             <h5 class="text-[12px] font-black uppercase text-white tracking-tight">${item.name}</h5>
-                            <p class="text-[8px] text-slate-600 font-bold">OPERATOR: samwelwayne266</p>
+                            <p class="text-[8px] text-slate-600 font-bold">OPERATOR: ${item.operator}</p>
                         </div>
                         <div class="flex items-center gap-6">
                             <div class="text-right">
@@ -300,56 +303,17 @@ function unlock() {
                         </div>
                     </div>`;
             }
-            document.getElementById('total-count').innerText = count.toString().padStart(3, '0');
+
+            document.getElementById('total-count').innerText =
+                count.toString().padStart(3, '0');
+
             updateChart(labels, values);
         });
 
-        // Visualization Engine
-        function updateChart(l, v) {
-            const ctx = document.getElementById('stockChart').getContext('2d');
-            if(chart) chart.destroy();
-            
-            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
-            gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: l,
-                    datasets: [{
-                        data: v,
-                        borderColor: '#6366f1',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#6366f1',
-                        pointBorderColor: '#020617',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        tension: 0.45,
-                        fill: true,
-                        backgroundColor: gradient
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: { 
-                            backgroundColor: '#0f172a',
-                            titleFont: { family: 'Inter', weight: '900' },
-                            bodyFont: { family: 'Inter' }
-                        }
-                    },
-                    scales: {
-                        y: { display: false },
-                        x: { 
-                            grid: { display: false }, 
-                            ticks: { color: '#475569', font: { size: 7, weight: 'bold' }, autoSkip: true } 
-                        }
-                    }
-                }
-            });
+    } else {
+        console.log("User not authenticated yet...");
+    }
+});
         }
 
         // Maintenance Protocol: Prevent accidental page refreshes on forms
@@ -362,14 +326,3 @@ function unlock() {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
