@@ -1,10 +1,10 @@
-# 🌌 Wayne Core | Quantum Logistics & POS Ecosystem
+# 🌌 Wayne Core | Inventory & POS System
 
 ![Status](https://img.shields.io/badge/STATUS-OPERATIONAL-emerald?style=for-the-badge&logo=statuspage)
 ![License](https://img.shields.io/badge/SECURITY-ENCRYPTED-indigo?style=for-the-badge&logo=auth0)
 ![Platform](https://img.shields.io/badge/PLATFORM-WEB_/_MOBILE-white?style=for-the-badge&logo=googlechrome)
 
-**Operator ID:** samwelwayne266  
+**Operator ID:** Samwel_Wayne  
 **System Version:** 13.0.2 (Enterprise Stable)  
 **Security Tier:** Level 5 (Auth-Gated)
 
@@ -15,13 +15,13 @@ Wayne Core is a high-fidelity, cloud-integrated management suite designed for re
 
 ### 🧩 Core Modules
 1.  **Inventory Hub (`index.html`)**: A centralized registry for asset nomenclature and UID (Unique Identifier) assignment. Features live stock distribution analytics.
-2.  **Sales Engine (`pos.html`)**: A debounced transactional terminal with optical capture and hybrid selection capabilities.
+2.  **Point Of Sale (`pos.html`)**: A debounced transactional terminal with optical capture and hybrid selection capabilities.
 
 ---
 
 ## 🚀 Key Features
 
-### 📡 Quantum Cloud Sync
+### 📡 Cloud Sync
 Powered by **Firebase Realtime Database**, every stock adjustment in the Sales Engine is reflected across the entire network instantly. No manual refreshing required.
 
 ### 👁️ Intelligent Optical Capture
