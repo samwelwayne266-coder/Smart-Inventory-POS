@@ -127,12 +127,16 @@
         </div>
 
         <div class="mt-auto p-4 bg-white/5 rounded-2xl border border-white/5">
+            <button onclick="logout()" 
+    class="compact-btn mt-6 bg-red-600 w-full">
+    Logout
+            </button>
             <div class="flex items-center gap-2 mb-2">
                 <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
                 <span class="text-[8px] font-mono text-slate-400">CLOUD_LINK_STABLE</span>
             </div>
             <p class="text-[8px] font-mono text-slate-600 uppercase">SUCCESSFULLY CONNECTED</p>
-        </div>
+      </div>
     </nav>
 
     <main id="main-view" class="flex-1 md:ml-64 p-6 lg:p-12 opacity-0 transition-opacity duration-1000">
@@ -323,43 +327,56 @@ const auth = firebase.auth();
 
 // Wait for authentication before accessing database
 auth.onAuthStateChanged(user => {
-    if (!user) return;
 
-    console.log("Authenticated UID:", user.uid);
+    if (user) {
+        // User is logged in
+        document.getElementById('auth-gate').classList.add('hidden');
+        document.getElementById('main-view').style.opacity = '1';
 
-    database.ref('inventory').on('value', snap => {
-        const data = snap.val() || {};
-        const feed = document.getElementById('registry-feed');
-        const labels = [], values = [];
-        let count = 0;
+        console.log("Authenticated UID:", user.uid);
 
-        feed.innerHTML = '';
+        startScanner();
 
-        for (let key in data) {
-            const item = data[key];
-            labels.push(item.name.substring(0, 10));
-            values.push(item.qty);
-            count++;
+        database.ref('inventory').on('value', snap => {
+            const data = snap.val() || {};
+            const feed = document.getElementById('registry-feed');
+            const labels = [], values = [];
+            let count = 0;
 
-            feed.innerHTML += `
-                <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center border border-white/5">
-                    <div>
-                        <span class="text-[7px] font-mono text-indigo-400">${item.code}</span>
-                        <h5 class="text-[12px] font-black text-white">${item.name}</h5>
-                        <p class="text-[8px] text-slate-600">OPERATOR: ${item.operator}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[13px] font-black text-indigo-100">${item.qty}</p>
-                        <p class="text-[10px] text-slate-500">$${item.price.toFixed(2)}</p>
-                    </div>
-                </div>`;
-        }
+            feed.innerHTML = '';
 
-        document.getElementById('total-count').innerText =
-            count.toString().padStart(3, '0');
+            for (let key in data) {
+                const item = data[key];
+                labels.push(item.name.substring(0, 10));
+                values.push(item.qty);
+                count++;
 
-        updateChart(labels, values);
-    });
+                feed.innerHTML += `
+                    <div class="glass-panel p-5 rounded-[1.5rem] flex justify-between items-center border border-white/5">
+                        <div>
+                            <span class="text-[7px] font-mono text-indigo-400">${item.code}</span>
+                            <h5 class="text-[12px] font-black text-white">${item.name}</h5>
+                            <p class="text-[8px] text-slate-600">OPERATOR: ${item.operator}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[13px] font-black text-indigo-100">${item.qty}</p>
+                            <p class="text-[10px] text-slate-500">$${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>`;
+            }
+
+            document.getElementById('total-count').innerText =
+                count.toString().padStart(3, '0');
+
+            updateChart(labels, values);
+        });
+
+    } else {
+        // Not logged in
+        document.getElementById('auth-gate').classList.remove('hidden');
+        document.getElementById('main-view').style.opacity = '0';
+    }
+});
 });
 
 // Updated push function
@@ -403,6 +420,7 @@ function pushToCloud() {
     </script>
 </body>
 </html>
+
 
 
 
