@@ -313,7 +313,7 @@ auth.onAuthStateChanged(user => {
 // 🛠 UI HELPERS (Scanner, Chart, etc.)
 function startScanner() {
     const scanner = new Html5Qrcode("inventory-reader");
-    scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 260, height: 160 } },
+    scanner.start({ facingMode: "environment" }, { fps: 30, qrbox: { width: 460, height: 460 } },
         (text) => { document.getElementById('itemCode').value = text; }
     ).catch(err => console.error(err));
 }
@@ -348,6 +348,7 @@ function pushToCloud() {
 </script>
 </body>
 </html>
+
 
 
 
