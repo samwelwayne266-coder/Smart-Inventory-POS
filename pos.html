@@ -188,10 +188,15 @@
      * POS + AUTH + CLOUD SYNC
      */
     const firebaseConfig = { 
-        apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0", 
-        databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com", 
-        projectId: "wayne-quantum" 
-    };
+  apiKey: "AIzaSyB2H-TwXRy96peqpjyQGbmzBovKSP_s0W0",
+  authDomain: "wayne-quantum.firebaseapp.com",
+  databaseURL: "https://wayne-quantum-default-rtdb.firebaseio.com",
+  projectId: "wayne-quantum",
+  storageBucket: "wayne-quantum.firebasestorage.app",
+  messagingSenderId: "970591554036",
+  appId: "1:970591554036:web:d1b8ff2b3d0f5cbe37d1a1",
+  measurementId: "G-V03LP7F49X"
+};
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -375,6 +380,7 @@
 </script>
 </body>
 </html>
+
 
 
 
